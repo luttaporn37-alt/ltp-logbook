@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สมุดบันทึกเครื่องมือช่าง</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f4f4f1;color:#1a1a18;font-size:15px;line-height:1.5}
+.header{background:#fff;border-bottom:0.5px solid #ddd;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.header h1{font-size:17px;font-weight:600}
+.header p{font-size:11px;color:#888;margin-top:1px}
+.hbtns{display:flex;gap:8px;flex-shrink:0;align-items:center}
+.sync-status{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.sync-ok{background:#EAF3DE;color:#3B6D11}
+.sync-err{background:#FCEBEB;color:#A32D2D}
+.sync-loading{background:#f0f0ee;color:#666}
+.btn-primary{background:#1a1a18;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500}
+.btn-primary:hover{background:#333}
+.btn-ghost{background:none;border:0.5px solid #bbb;border-radius:8px;padding:7px 13px;font-size:13px;cursor:pointer;color:#1a1a18}
+.btn-ghost:hover{background:#f0f0ee}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
+.btn-danger{background:#A32D2D;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+.tabs{background:#fff;display:flex;padding:0 16px;border-bottom:0.5px solid #ddd;overflow-x:auto}
+.tab{padding:11px 14px;font-size:13px;color:#888;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;flex-shrink:0}
+.tab.active{color:#1a1a18;border-bottom-color:#1a1a18;font-weight:500}
+.content{max-width:780px;margin:18px auto;padding:0 14px 60px}
+.section{display:none}.section.active{display:block}
+.card{background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:500;margin-bottom:14px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-bottom:11px}
+.field{margin-bottom:11px}
+label{font-size:11px;color:#777;display:block;margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px}
+input,select,textarea{width:100%;font-size:13px;padding:8px 10px;border:0.5px solid #ccc;border-radius:7px;background:#fff;color:#1a1a18}
+textarea{resize:vertical;min-height:65px}
+input:focus,select:focus,textarea:focus{outline:2px solid #1a1a18;outline-offset:0;border-color:transparent}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.section-title{font-size:16px;font-weight:500}
+.divider{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:0.6px;margin:16px 0 8px;font-weight:600}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;white-space:nowrap}
+.bd{background:#FCEBEB;color:#A32D2D}.bw{background:#FAEEDA;color:#854F0B}
+.bs{background:#EAF3DE;color:#3B6D11}.bi{background:#E6F1FB;color:#185FA5}
+.bg{background:#f0f0ee;color:#555}
+.record-item{border-bottom:0.5px solid #eee;padding:10px 0}
+.record-item:last-child{border-bottom:none}
+.record-meta{font-size:12px;color:#999;margin-top:2px}
+.flex-between{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.flex-center{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+.stat{background:#f4f4f1;border-radius:8px;padding:11px 13px}
+.stat-label{font-size:11px;color:#888;margin-bottom:3px}
+.stat-value{font-size:20px;font-weight:600;color:#1a1a18}
+.stat-sub{font-size:11px;color:#aaa;margin-top:1px}
+.empty-state{text-align:center;padding:2rem;color:#bbb;font-size:13px}
+.loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.85);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.spinner{width:32px;height:32px;border:3px solid #eee;border-top-color:#1a1a18;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.alert-box{border-radius:8px;padding:9px 13px;font-size:13px;margin-bottom:8px}
+.alert-danger{background:#FCEBEB;color:#A32D2D;border:0.5px solid #f7c1c1}
+.alert-warning{background:#FAEEDA;color:#854F0B;border:0.5px solid #FAC775}
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:200;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal{background:#fff;border-radius:14px;padding:22px;width:480px;max-width:95vw;margin:auto;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:500;margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.tool-card{background:#fff;border:0.5px solid #ddd;border-radius:10px;padding:13px 15px;margin-bottom:9px;cursor:pointer}
+.tool-card:hover{border-color:#aaa}
+.search-bar{width:100%;font-size:14px;padding:9px 12px;border:0.5px solid #ccc;border-radius:8px;background:#fff;margin-bottom:12px}
+.search-bar:focus{outline:2px solid #1a1a18;border-color:transparent}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filter-row select{width:auto;font-size:13px;padding:6px 10px}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;margin-top:3px}
+.dot-ok{background:#3B6D11}.dot-repair{background:#854F0B}.dot-broken{background:#A32D2D}.dot-out{background:#185FA5}.dot-retired{background:#aaa}
+table.rep-table{width:100%;font-size:13px;border-collapse:collapse}
+table.rep-table th{text-align:left;padding:7px 10px;font-size:11px;color:#888;font-weight:600;text-transform:uppercase;border-bottom:0.5px solid #eee}
+table.rep-table td{padding:8px 10px;border-bottom:0.5px solid #f5f5f2}
+.num{text-align:right}
+@media(max-width:560px){.row,.row-3{grid-template-columns:1fr}.stat-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div id="loading-overlay" class="loading-overlay">
+  <div class="spinner"></div>
+  <div style="font-size:14px;color:#666">กำลังโหลดข้อมูลจาก Google Sheets...</div>
+</div>
+
+<div class="header">
+  <div>
+    <h1>สมุดบันทึกเครื่องมือช่าง</h1>
+    <p>ข้อมูลเชื่อมกับ Google Sheets — ใช้ร่วมกันได้ทุกเครื่อง</p>
+  </div>
+  <div class="hbtns">
+    <span id="sync-status" class="sync-status sync-loading">กำลังเชื่อมต่อ...</span>
+    <button class="btn-ghost btn-sm" onclick="loadAll()">🔄 Refresh</button>
+    <button class="btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
+    <button class="btn-primary btn-sm" onclick="openModal('modal-tool')">+ เพิ่มเครื่องมือ</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('overview',this)">ภาพรวม</button>
+  <button class="tab" onclick="switchTab('tools',this)">เครื่องมือทั้งหมด</button>
+  <button class="tab" onclick="switchTab('checkout',this)">เบิก / คืน</button>
+  <button class="tab" onclick="switchTab('repair',this)">ซ่อมบำรุง</button>
+  <button class="tab" onclick="switchTab('report',this)">รายงาน</button>
+</div>
+
+<div class="content">
+
+<div class="section active" id="tab-overview">
+  <div id="alert-area"></div>
+  <div id="overview-content"><div class="empty-state">กำลังโหลด...</div></div>
+</div>
+
+<div class="section" id="tab-tools">
+  <div class="section-header"><span class="section-title">เครื่องมือทั้งหมด</span><button class="btn-primary btn-sm" onclick="openModal('modal-tool')">+ เพิ่มเครื่องมือ</button></div>
+  <input class="search-bar" id="tool-search" placeholder="ค้นหาชื่อ รหัส ยี่ห้อ หรือหมวดหมู่..." oninput="renderToolsList()">
+  <div class="filter-row">
+    <select id="filter-cat" onchange="renderToolsList()"><option value="">หมวดหมู่ทั้งหมด</option></select>
+    <select id="filter-status" onchange="renderToolsList()"><option value="">สถานะทั้งหมด</option><option value="ok">พร้อมใช้</option><option value="out">ถูกเบิกออก</option><option value="repair">ซ่อมอยู่</option><option value="broken">ชำรุด/พัง</option><option value="retired">เลิกใช้</option></select>
+  </div>
+  <div id="tools-list"></div>
+</div>
+
+<div class="section" id="tab-checkout">
+  <div class="section-header"><span class="section-title">เบิก / คืนเครื่องมือ</span></div>
+  <div class="card">
+    <div class="card-title">บันทึกการเบิก</div>
+    <div class="row"><div><label>เลือกเครื่องมือ</label><select id="co-tool"></select></div><div><label>ชื่อผู้เบิก *</label><input type="text" id="co-person" placeholder="ชื่อพนักงาน/ช่าง"></div></div>
+    <div class="row"><div><label>วันที่เบิก</label><input type="date" id="co-date"></div><div><label>กำหนดคืน</label><input type="date" id="co-due"></div></div>
+    <div class="row"><div><label>แผนก / โปรเจกต์</label><input type="text" id="co-dept" placeholder="เช่น แผนกซ่อมบำรุง"></div><div><label>วัตถุประสงค์</label><input type="text" id="co-purpose" placeholder="เช่น งานซ่อมท่อชั้น 3"></div></div>
+    <div class="row">
+      <div><label>สถานะ</label>
+        <select id="co-returned">
+          <option value="false">ยังไม่คืน</option>
+          <option value="true">คืนแล้ว</option>
+        </select>
+      </div>
+      <div id="co-return-date-wrap" style="display:none"><label>วันที่คืน</label><input type="date" id="co-return-date"></div>
+    </div>
+    <div class="field"><label>หมายเหตุ</label><textarea id="co-note" placeholder="บันทึกเพิ่มเติม..."></textarea></div>
+    <button class="btn-primary" onclick="saveCheckout()">บันทึกการเบิก</button>
+  </div>
+  <p class="divider">รายการที่ยังไม่ได้คืน</p>
+  <div id="active-checkouts" class="card"></div>
+  <p class="divider">ประวัติการเบิก-คืน</p>
+  <div id="checkout-history" class="card"></div>
+</div>
+
+<div class="section" id="tab-repair">
+  <div class="section-header"><span class="section-title">บันทึกการซ่อมบำรุง</span></div>
+  <div class="card">
+    <div class="row"><div><label>เลือกเครื่องมือ</label><select id="rep-tool"></select></div><div><label>วันที่ส่งซ่อม</label><input type="date" id="rep-date"></div></div>
+    <div class="row"><div><label>ประเภทการซ่อม</label><select id="rep-type"><option>ซ่อมแซม</option><option>เปลี่ยนอะไหล่</option><option>สอบเทียบ (Calibrate)</option><option>ทำความสะอาด</option><option>บำรุงรักษาตามกำหนด</option><option>อื่นๆ</option></select></div><div><label>ค่าซ่อม (บาท)</label><input type="number" id="rep-amount" placeholder="0"></div></div>
+    <div class="field"><label>รายละเอียดการซ่อม</label><textarea id="rep-detail" placeholder="อธิบายปัญหาและสิ่งที่ซ่อม/เปลี่ยน..."></textarea></div>
+    <div class="row"><div><label>ร้าน / ช่างที่ซ่อม</label><input type="text" id="rep-shop" placeholder="ชื่อร้านหรือช่าง"></div><div><label>วันที่ซ่อมเสร็จ</label><input type="date" id="rep-done"></div></div>
+    <div class="field"><label>สถานะหลังซ่อม</label><select id="rep-status-after"><option value="ok">พร้อมใช้งาน</option><option value="repair">ยังซ่อมอยู่</option><option value="broken">ชำรุด / ไม่คุ้มซ่อม</option></select></div>
+    <button class="btn-primary" onclick="saveRepair()">บันทึกการซ่อม</button>
+  </div>
+  <p class="divider">ประวัติการซ่อมล่าสุด</p>
+  <div id="repair-list" class="card"></div>
+</div>
+
+<div class="section" id="tab-report">
+  <div class="section-header"><span class="section-title">รายงานสรุป</span><button class="btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button></div>
+  <div id="report-content"></div>
+</div>
+
+</div>
+
+<!-- MODAL: Add/Edit Tool -->
+<div class="modal-bg" id="modal-tool">
+  <div class="modal">
+    <div class="modal-title" id="modal-tool-title">เพิ่มเครื่องมือใหม่</div>
+    <input type="hidden" id="edit-tool-id">
+    <div class="row"><div><label>ชื่อเครื่องมือ *</label><input type="text" id="nt-name" placeholder="เช่น สว่านไฟฟ้า Bosch"></div><div><label>รหัสเครื่องมือ</label><input type="text" id="nt-code" placeholder="เช่น TL-001"></div></div>
+    <div class="row"><div><label>หมวดหมู่</label><select id="nt-cat"><option>เครื่องมือไฟฟ้า</option><option>เครื่องมือมือ</option><option>เครื่องมือวัด</option><option>อุปกรณ์ยก/เคลื่อน</option><option>อุปกรณ์ความปลอดภัย</option><option>เครื่องจักร</option><option>อื่นๆ</option></select></div><div><label>ยี่ห้อ / รุ่น</label><input type="text" id="nt-brand" placeholder="เช่น Bosch GBM 10RE"></div></div>
+    <div class="row"><div><label>เลขซีเรียล</label><input type="text" id="nt-serial" placeholder="Serial No."></div><div><label>ตำแหน่งจัดเก็บ</label><input type="text" id="nt-location" placeholder="เช่น ตู้ A ชั้น 2"></div></div>
+    <div class="row"><div><label>วันที่ซื้อ</label><input type="date" id="nt-bought"></div><div><label>ราคาซื้อ (บาท)</label><input type="number" id="nt-price" placeholder="0"></div></div>
+    <div class="row"><div><label>รับประกันถึงวันที่</label><input type="date" id="nt-warranty"></div><div><label>จำนวน (ชิ้น)</label><input type="number" id="nt-qty" placeholder="1" min="1"></div></div>
+    <div class="field"><label>สถานะปัจจุบัน</label><select id="nt-status"><option value="ok">พร้อมใช้</option><option value="repair">ซ่อมอยู่</option><option value="broken">ชำรุด/พัง</option><option value="retired">เลิกใช้</option></select></div>
+    <div class="field"><label>หมายเหตุ</label><textarea id="nt-note" placeholder="บันทึกเพิ่มเติม..."></textarea></div>
+    <div style="border-top:0.5px solid #eee;margin:12px 0"></div>
+    <label style="margin-bottom:6px;display:block">รูปภาพเครื่องมือ</label>
+    <div id="photo-drop-zone" onclick="document.getElementById('nt-photo-input').click()" style="border:1.5px dashed #ccc;border-radius:10px;padding:16px;text-align:center;cursor:pointer;color:#aaa;font-size:13px;margin-bottom:8px">
+      📷 คลิกหรือลากรูปมาวางที่นี่<br><span style="font-size:11px">JPG, PNG — ไม่เกิน 3MB</span>
+    </div>
+    <input type="file" id="nt-photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)">
+    <div id="photo-preview" style="display:none;margin-bottom:10px;position:relative">
+      <img id="photo-preview-img" style="width:100%;max-height:200px;object-fit:contain;border-radius:8px;border:0.5px solid #eee">
+      <button onclick="clearPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:14px;line-height:1">×</button>
+    </div>
+    <div class="modal-actions"><button class="btn-ghost" onclick="closeModal('modal-tool');resetToolForm()">ยกเลิก</button><button class="btn-primary" onclick="saveTool()">บันทึก</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Tool Detail -->
+<div class="modal-bg" id="modal-detail">
+  <div class="modal" style="width:520px"><div id="detail-content"></div>
+    <div class="modal-actions"><button class="btn-ghost" onclick="closeModal('modal-detail')">ปิด</button><button class="btn-primary" id="detail-edit-btn">แก้ไข</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Edit Record -->
+<div class="modal-bg" id="modal-edit">
+  <div class="modal" style="width:500px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title" id="edit-modal-title">แก้ไข</div>
+    <div id="edit-modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-edit')">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveEdit()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbxPrO1WQKZwyrGMIW6KBNUoyCSUDBdciBQWahpScvWeKAONEnSFj614eQEZD4EzT3jYbQ/exec';
+
+let data = { tools:[], checkout:[], repair_tool:[] };
+const fmt = n => Number(n||0).toLocaleString('th-TH');
+function fmtDate(d){
+  if(!d||d===''||d==='undefined'||d==='null') return '-';
+  try{
+    // handle MM/DD/YYYY from Sheets
+    let dt;
+    if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(d)){
+      const [m,day,y]=d.split('/'); dt=new Date(y,m-1,day);
+    } else {
+      dt=new Date(d.includes('T')?d:d+'T00:00:00');
+    }
+    if(isNaN(dt.getTime())) return d;
+    return dt.toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'});
+  }catch(e){ return d; }
+}
+function daysDiff(ds){
+  try{
+    let dt;
+    if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(ds)){
+      const [m,day,y]=ds.split('/'); dt=new Date(y,m-1,day);
+    } else { dt=new Date(ds+'T00:00:00'); }
+    return Math.ceil((dt-new Date())/86400000);
+  }catch(e){ return 9999; }
+}
+const today = new Date().toISOString().split('T')[0];
+
+const SL={ok:'พร้อมใช้',out:'ถูกเบิกออก',repair:'ซ่อมอยู่',broken:'ชำรุด/พัง',retired:'เลิกใช้'};
+const SB={ok:'bs',out:'bi',repair:'bw',broken:'bd',retired:'bg'};
+const SD={ok:'dot-ok',out:'dot-out',repair:'dot-repair',broken:'dot-broken',retired:'dot-retired'};
+
+function isReturned(c){ return c.returned==='true'||c.returned===true||c.returned==='1'||c.returned==='yes'; }
+function getTool(id){ return data.tools.find(t=>t.id===id); }
+function getToolName(id){ const t=getTool(id); return t?`${t.name}${t.code?' ('+t.code+')':''}`:id; }
+function effectiveStatus(tool){ if(data.checkout.find(c=>c.toolId===tool.id&&!isReturned(c))) return 'out'; return tool.status||'ok'; }
+
+function setSyncStatus(state,msg){ const el=document.getElementById('sync-status'); el.className='sync-status sync-'+state; el.textContent=msg; }
+
+async function apiCall(action,table,payload){
+  const body={action,table,...payload};
+  const res=await fetch(API,{method:'POST',body:JSON.stringify(body)});
+  return res.json();
+}
+
+async function loadAll(){
+  setSyncStatus('loading','กำลังโหลด...');
+  document.getElementById('loading-overlay').style.display='flex';
+  try{
+    const res=await fetch(API+'?action=getAll');
+    const d=await res.json();
+    if(d.error) throw new Error(d.error);
+    data.tools=d.tools||[];
+    data.checkout=d.checkout||[];
+    data.repair_tool=d.repair_tool||[];
+    setSyncStatus('ok','✓ ซิงค์แล้ว '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}));
+    populateToolSelect('co-tool'); populateToolSelect('rep-tool'); populateCatFilter();
+    renderCurrentTab();
+  }catch(e){ setSyncStatus('err','เชื่อมต่อไม่ได้'); console.error(e); }
+  document.getElementById('loading-overlay').style.display='none';
+}
+
+async function pushRow(table,row){
+  setSyncStatus('loading','กำลังบันทึก...');
+  try{ const r=await apiCall('upsert',table,{row}); if(r.error) throw new Error(r.error); setSyncStatus('ok','✓ บันทึกแล้ว'); return true; }
+  catch(e){ setSyncStatus('err','บันทึกไม่สำเร็จ'); return false; }
+}
+
+async function updateFieldRemote(table,id,field,value){
+  try{ await apiCall('updateField',table,{id,field,value}); }catch(e){ console.error(e); }
+}
+
+let currentTab='overview';
+function switchTab(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active'); el.classList.add('active'); currentTab=id;
+  populateToolSelect('co-tool'); populateToolSelect('rep-tool'); populateCatFilter();
+  renderCurrentTab();
+}
+function renderCurrentTab(){
+  if(currentTab==='overview') renderOverview();
+  if(currentTab==='tools'){ populateCatFilter(); renderToolsList(); }
+  if(currentTab==='checkout') renderCheckouts();
+  if(currentTab==='repair') renderRepairList();
+  if(currentTab==='report') renderReport();
+}
+
+function openModal(id){ document.getElementById(id).style.display='flex'; }
+function closeModal(id){ document.getElementById(id).style.display='none'; }
+
+function populateToolSelect(selId){
+  document.getElementById(selId).innerHTML=data.tools.length===0?'<option value="">-- ยังไม่มีเครื่องมือ --</option>':data.tools.map(t=>`<option value="${t.id}">${t.name}${t.code?' ('+t.code+')':''}</option>`).join('');
+}
+function populateCatFilter(){
+  const cats=[...new Set(data.tools.map(t=>t.cat).filter(Boolean))];
+  const el=document.getElementById('filter-cat'); const cur=el.value;
+  el.innerHTML='<option value="">หมวดหมู่ทั้งหมด</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if(cur) el.value=cur;
+}
+
+// ── PHOTO STORAGE (localStorage per tool) ──
+let pendingPhoto = null; // base64 string
+
+function handlePhotoUpload(input){
+  const file = input.files[0]; if(!file) return;
+  if(file.size > 3*1024*1024){ alert('รูปใหญ่เกิน 3MB ครับ กรุณาบีบอัดก่อน'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    pendingPhoto = e.target.result;
+    document.getElementById('photo-preview-img').src = pendingPhoto;
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('photo-drop-zone').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function clearPhoto(){
+  pendingPhoto = null;
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('photo-drop-zone').style.display = 'block';
+  document.getElementById('photo-preview-img').src = '';
+}
+
+function savePhotoLocal(toolId, photoData){
+  try{ localStorage.setItem('tool_photo_'+toolId, photoData); }catch(e){ alert('พื้นที่เก็บรูปเต็มครับ ลองลดขนาดรูปก่อน'); }
+}
+function getPhotoLocal(toolId){ try{ return localStorage.getItem('tool_photo_'+toolId); }catch(e){ return null; } }
+function deletePhotoLocal(toolId){ try{ localStorage.removeItem('tool_photo_'+toolId); }catch(e){} }
+
+// drag-drop
+document.addEventListener('DOMContentLoaded',()=>{
+  const dz = document.getElementById('photo-drop-zone'); if(!dz) return;
+  dz.addEventListener('dragover',e=>{ e.preventDefault(); dz.style.borderColor='#1a1a18'; dz.style.background='#f9f9f7'; });
+  dz.addEventListener('dragleave',()=>{ dz.style.borderColor='#ccc'; dz.style.background=''; });
+  dz.addEventListener('drop',e=>{ e.preventDefault(); dz.style.borderColor='#ccc'; dz.style.background='';
+    const f = e.dataTransfer.files[0]; if(f&&f.type.startsWith('image/')){
+      const inp = document.getElementById('nt-photo-input');
+      const dt = new DataTransfer(); dt.items.add(f); inp.files = dt.files; handlePhotoUpload(inp);
+    }
+  });
+});
+
+function resetToolForm(){
+  document.getElementById('edit-tool-id').value='';
+  document.getElementById('modal-tool-title').textContent='เพิ่มเครื่องมือใหม่';
+  ['nt-name','nt-code','nt-brand','nt-serial','nt-location','nt-price','nt-note','nt-bought','nt-warranty'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nt-cat').value='เครื่องมือไฟฟ้า'; document.getElementById('nt-status').value='ok'; document.getElementById('nt-qty').value='1';
+  clearPhoto();
+}
+
+function editTool(id){
+  const t=getTool(id); if(!t) return; closeModal('modal-detail');
+  document.getElementById('edit-tool-id').value=t.id;
+  document.getElementById('modal-tool-title').textContent='แก้ไขเครื่องมือ';
+  ['name','code','brand','serial','location','price','note'].forEach(f=>{ const el=document.getElementById('nt-'+f); if(el) el.value=t[f]||''; });
+  document.getElementById('nt-cat').value=t.cat||'เครื่องมือไฟฟ้า';
+  document.getElementById('nt-bought').value=t.bought||'';
+  document.getElementById('nt-warranty').value=t.warranty||'';
+  document.getElementById('nt-qty').value=t.qty||1;
+  document.getElementById('nt-status').value=t.status||'ok';
+  // load existing photo
+  const existingPhoto = getPhotoLocal(t.id);
+  if(existingPhoto){
+    pendingPhoto = existingPhoto;
+    document.getElementById('photo-preview-img').src = existingPhoto;
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('photo-drop-zone').style.display = 'none';
+  } else { clearPhoto(); }
+  openModal('modal-tool');
+}
+
+async function saveTool(){
+  const name=document.getElementById('nt-name').value.trim();
+  if(!name){ alert('กรุณาใส่ชื่อเครื่องมือ'); return; }
+  const editId=document.getElementById('edit-tool-id').value;
+  const obj={name,code:document.getElementById('nt-code').value.trim(),cat:document.getElementById('nt-cat').value,brand:document.getElementById('nt-brand').value,serial:document.getElementById('nt-serial').value,location:document.getElementById('nt-location').value,bought:document.getElementById('nt-bought').value,price:document.getElementById('nt-price').value,warranty:document.getElementById('nt-warranty').value,qty:document.getElementById('nt-qty').value||1,status:document.getElementById('nt-status').value,note:document.getElementById('nt-note').value};
+  if(editId){
+    obj.id=editId; const ok=await pushRow('tools',obj); if(!ok) return;
+    const idx=data.tools.findIndex(t=>t.id===editId); if(idx>=0) data.tools[idx]={...data.tools[idx],...obj};
+    if(pendingPhoto) savePhotoLocal(editId, pendingPhoto);
+  } else {
+    obj.id=Date.now().toString(); obj.createdAt=today;
+    const ok=await pushRow('tools',obj); if(!ok) return;
+    data.tools.push(obj);
+    if(pendingPhoto) savePhotoLocal(obj.id, pendingPhoto);
+  }
+  closeModal('modal-tool'); resetToolForm(); populateCatFilter(); renderToolsList(); renderOverview();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const retSel = document.getElementById('co-returned');
+  if(retSel) retSel.addEventListener('change',()=>{
+    document.getElementById('co-return-date-wrap').style.display = retSel.value==='true' ? '' : 'none';
+    if(retSel.value==='true') document.getElementById('co-return-date').value = today;
+  });
+});
+
+async function saveCheckout(){
+  const toolId=document.getElementById('co-tool').value;
+  if(!toolId){alert('กรุณาเลือกเครื่องมือ');return;}
+  const person=document.getElementById('co-person').value.trim();
+  if(!person){alert('กรุณาระบุชื่อผู้เบิก');return;}
+  const returned = document.getElementById('co-returned').value;
+  const returnDate = returned==='true' ? (document.getElementById('co-return-date').value||today) : '';
+  // only block if already borrowed AND we're recording a new borrow (not-returned)
+  if(returned==='false'){
+    const existing=data.checkout.find(c=>c.toolId===toolId&&!isReturned(c));
+    if(existing){alert(`เครื่องมือนี้ยังถูกเบิกโดย "${existing.person}" อยู่`);return;}
+  }
+  const row={id:Date.now().toString(),toolId,person,
+    date:document.getElementById('co-date').value,
+    due:document.getElementById('co-due').value,
+    dept:document.getElementById('co-dept').value,
+    purpose:document.getElementById('co-purpose').value,
+    note:document.getElementById('co-note').value,
+    returned, returnDate};
+  const ok=await pushRow('checkout',row); if(!ok) return;
+  data.checkout.push(row);
+  ['co-person','co-due','co-dept','co-purpose','co-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('co-date').value=today;
+  document.getElementById('co-returned').value='false';
+  document.getElementById('co-return-date-wrap').style.display='none';
+  renderCheckouts(); renderOverview(); renderToolsList();
+}
+
+async function returnTool(checkoutId){
+  const c=data.checkout.find(c=>c.id===checkoutId); if(!c) return;
+  c.returned='true'; c.returnDate=today;
+  await updateFieldRemote('checkout',checkoutId,'returned','true');
+  await updateFieldRemote('checkout',checkoutId,'returnDate',today);
+  setSyncStatus('ok','✓ บันทึกการคืนแล้ว');
+  renderCheckouts(); renderOverview(); renderToolsList(); closeModal('modal-detail');
+}
+
+async function saveRepair(){
+  const toolId=document.getElementById('rep-tool').value;
+  if(!toolId){alert('กรุณาเลือกเครื่องมือ');return;}
+  const statusAfter=document.getElementById('rep-status-after').value;
+  const row={id:Date.now().toString(),toolId,date:document.getElementById('rep-date').value,type:document.getElementById('rep-type').value,amount:document.getElementById('rep-amount').value,detail:document.getElementById('rep-detail').value,shop:document.getElementById('rep-shop').value,done:document.getElementById('rep-done').value,statusAfter};
+  const ok=await pushRow('repair_tool',row); if(!ok) return;
+  data.repair_tool.push(row);
+  const t=getTool(toolId); if(t){ t.status=statusAfter; await updateFieldRemote('tools',toolId,'status',statusAfter); }
+  ['rep-amount','rep-detail','rep-shop','rep-done'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rep-date').value=today; document.getElementById('rep-status-after').value='ok';
+  renderRepairList(); renderOverview(); renderToolsList();
+}
+
+function renderToolsList(){
+  const search=(document.getElementById('tool-search').value||'').toLowerCase();
+  const catF=document.getElementById('filter-cat').value;
+  const statusF=document.getElementById('filter-status').value;
+  const tools=data.tools.filter(t=>{ const es=effectiveStatus(t); return(!search||(t.name||'').toLowerCase().includes(search)||(t.code||'').toLowerCase().includes(search)||(t.cat||'').toLowerCase().includes(search)||(t.brand||'').toLowerCase().includes(search))&&(!catF||t.cat===catF)&&(!statusF||es===statusF); });
+  const el=document.getElementById('tools-list');
+  if(tools.length===0){ el.innerHTML='<div class="card"><div class="empty-state">ไม่พบเครื่องมือ</div></div>'; return; }
+  el.innerHTML=tools.map(t=>{
+    const es=effectiveStatus(t);
+    const active=data.checkout.find(c=>c.toolId===t.id&&!isReturned(c));
+    const repCost=data.repair_tool.filter(r=>r.toolId===t.id).reduce((s,r)=>s+Number(r.amount||0),0);
+    const wAlert=t.warranty&&daysDiff(t.warranty)>=0&&daysDiff(t.warranty)<=30;
+    const photo=getPhotoLocal(t.id);
+    return `<div class="tool-card" onclick="showDetail('${t.id}')" style="display:flex;gap:12px;align-items:flex-start">
+      ${photo?`<img src="${photo}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:0.5px solid #eee;flex-shrink:0">`:`<div style="width:56px;height:56px;border-radius:8px;background:#f4f4f1;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:0.5px solid #eee">🔧</div>`}
+      <div style="flex:1;min-width:0">
+        <div class="flex-between"><div class="flex-center"><span class="status-dot ${SD[es]}"></span><strong style="font-size:14px">${t.name}</strong>${t.code?`<span class="badge bg">${t.code}</span>`:''}<span class="badge ${SB[es]}">${SL[es]}</span>${wAlert?'<span class="badge bw">ประกันใกล้หมด</span>':''}</div><span style="font-size:12px;color:#aaa;flex-shrink:0">${t.cat||''}</span></div>
+        <div class="record-meta" style="margin-top:4px">${[t.brand,t.location?'📍 '+t.location:''].filter(Boolean).join(' · ')}</div>
+        ${active?`<div class="record-meta" style="color:#185FA5">เบิกโดย <strong>${active.person}</strong>${active.due?' · กำหนดคืน '+fmtDate(active.due):''}</div>`:''}
+        <div class="record-meta">${t.bought?'ซื้อ '+fmtDate(t.bought):''}${t.price?' · ราคา '+fmt(t.price)+' ฿':''}${repCost>0?' · ค่าซ่อมรวม '+fmt(repCost)+' ฿':''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showDetail(id){
+  const t=getTool(id); if(!t) return;
+  const es=effectiveStatus(t);
+  const active=data.checkout.find(c=>c.toolId===id&&!isReturned(c));
+  const checkouts=[...data.checkout].filter(c=>c.toolId===id).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const repairs=[...data.repair_tool].filter(r=>r.toolId===id).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const repCost=repairs.reduce((s,r)=>s+Number(r.amount||0),0);
+  const photo=getPhotoLocal(t.id);
+  document.getElementById('detail-content').innerHTML=`
+    ${photo?`<div style="margin-bottom:14px;text-align:center;position:relative">
+      <img src="${photo}" style="max-width:100%;max-height:220px;object-fit:contain;border-radius:10px;border:0.5px solid #eee;cursor:pointer" onclick="window.open(this.src)">
+      <div style="margin-top:6px;display:flex;gap:8px;justify-content:center">
+        <span style="font-size:11px;color:#aaa">คลิกรูปเพื่อดูขนาดเต็ม</span>
+        <button onclick="if(confirm('ลบรูปนี้?')){ deletePhotoLocal('${t.id}'); closeModal('modal-detail'); showDetail('${t.id}'); }" style="font-size:11px;color:#A32D2D;background:none;border:none;cursor:pointer;padding:0">ลบรูป</button>
+      </div>
+    </div>`:`<div style="margin-bottom:14px;text-align:center;padding:20px;background:#f9f9f7;border-radius:10px;color:#ccc;font-size:13px;cursor:pointer" onclick="closeModal('modal-detail');editTool('${t.id}')">📷 ยังไม่มีรูป — คลิกแก้ไขเพื่อเพิ่มรูป</div>`}
+    <div class="flex-between" style="margin-bottom:14px;align-items:flex-start"><div><div style="font-size:17px;font-weight:600">${t.name}</div><div style="font-size:12px;color:#888;margin-top:2px">${[t.code,t.brand,t.cat].filter(Boolean).join(' · ')}</div></div><span class="badge ${SB[es]}" style="font-size:12px;padding:4px 10px">${SL[es]}</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px">${t.serial?`<div><span style="color:#999">ซีเรียล:</span> ${t.serial}</div>`:''} ${t.location?`<div><span style="color:#999">จัดเก็บ:</span> ${t.location}</div>`:''} ${t.bought?`<div><span style="color:#999">วันที่ซื้อ:</span> ${fmtDate(t.bought)}</div>`:''} ${t.price?`<div><span style="color:#999">ราคาซื้อ:</span> ${fmt(t.price)} ฿</div>`:''} ${t.warranty?`<div><span style="color:#999">ประกันถึง:</span> ${fmtDate(t.warranty)}</div>`:''} ${t.qty?`<div><span style="color:#999">จำนวน:</span> ${t.qty} ชิ้น</div>`:''}</div>
+    ${t.note?`<div style="font-size:13px;color:#666;margin-bottom:10px;padding:8px 10px;background:#f9f9f7;border-radius:7px">${t.note}</div>`:''}
+    ${repCost>0?`<div style="font-size:13px;margin-bottom:10px">ค่าซ่อมรวม: <strong>${fmt(repCost)} ฿</strong> (${repairs.length} ครั้ง)</div>`:''}
+    ${active?`<div style="background:#E6F1FB;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:12px">กำลังถูกเบิกโดย <strong>${active.person}</strong>${active.dept?' — '+active.dept:''}${active.due?' · กำหนดคืน '+fmtDate(active.due):''}<div style="margin-top:8px"><button class="btn-primary btn-sm" onclick="returnTool('${active.id}')">บันทึกการคืน</button></div></div>`:''}
+    ${checkouts.length>0?`<div class="divider">ประวัติเบิก (${checkouts.length} ครั้ง)</div><div style="font-size:13px">${checkouts.slice(0,5).map(c=>`<div class="record-item"><div class="flex-between"><span><strong>${c.person}</strong>${c.dept?' · '+c.dept:''}</span><span class="badge ${(c.returned==='true'||c.returned===true)?'bs':'bi'}">${(c.returned==='true'||c.returned===true)?'คืนแล้ว':'ยังไม่คืน'}</span></div><div class="record-meta">${fmtDate(c.date)}${c.due?' → '+fmtDate(c.due):''}${(c.returned==='true'||c.returned===true)?' · คืน '+fmtDate(c.returnDate):''}</div></div>`).join('')}</div>`:''}
+    ${repairs.length>0?`<div class="divider">ประวัติซ่อม (${repairs.length} ครั้ง)</div><div style="font-size:13px">${repairs.slice(0,5).map(r=>`<div class="record-item"><div class="flex-between"><span>${r.type}</span><span style="font-weight:500">${fmt(r.amount)} ฿</span></div><div class="record-meta">${fmtDate(r.date)}${r.shop?' · '+r.shop:''}</div>${r.detail?`<div class="record-meta">${r.detail}</div>`:''}</div>`).join('')}</div>`:''}
+    <div style="margin-top:14px;padding-top:12px;border-top:0.5px solid #eee">
+      <button onclick="deleteTool('${t.id}')" style="background:none;border:0.5px solid #f7c1c1;color:#A32D2D;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer">ลบเครื่องมือนี้</button>
+    </div>`;
+  document.getElementById('detail-edit-btn').onclick=()=>editTool(id);
+  openModal('modal-detail');
+}
+
+function renderCheckouts(){
+  const active=data.checkout.filter(c=>!isReturned(c)).sort((a,b)=>new Date(a.due||'9999')-new Date(b.due||'9999'));
+  const history=[...data.checkout].filter(c=>c.returned==='true'||c.returned===true).sort((a,b)=>new Date(b.returnDate)-new Date(a.returnDate));
+  const aEl=document.getElementById('active-checkouts');
+  aEl.innerHTML=active.length===0?'<div class="empty-state">ไม่มีรายการที่ยังไม่คืน ✓</div>':active.map(c=>{ const d=c.due?daysDiff(c.due):null; const ov=d!==null&&d<0,sn=d!==null&&d<=3&&d>=0;
+    return `<div class="record-item"><div class="flex-between"><div><strong>${c.person}</strong> → <span style="font-weight:500">${getToolName(c.toolId)}</span>${ov?`<span class="badge bd" style="margin-left:5px">เกินกำหนด ${Math.abs(d)} วัน</span>`:sn?`<span class="badge bw" style="margin-left:5px">คืนใน ${d} วัน</span>`:''}</div><button class="btn-primary btn-sm" onclick="returnTool('${c.id}')">คืนแล้ว</button></div><div class="record-meta">${fmtDate(c.date)}${c.due?' · กำหนดคืน '+fmtDate(c.due):''}${c.dept?' · '+c.dept:''}${c.purpose?' · '+c.purpose:''}</div></div>`;
+  }).join('');
+  const hEl=document.getElementById('checkout-history');
+  hEl.innerHTML=history.length===0?'<div class="empty-state">ยังไม่มีประวัติ</div>':history.slice(0,30).map(c=>`<div class="record-item"><div class="flex-between"><div><strong>${c.person}</strong> · ${getToolName(c.toolId)}</div><div style="display:flex;gap:5px;align-items:center"><span class="badge bs">คืนแล้ว</span><button onclick="openEditModal('checkout','checkout','${c.id}')" class="btn-ghost btn-sm" style="padding:3px 9px;font-size:11px">แก้ไข</button><button onclick="deleteToolRecord('checkout','${c.id}')" style="background:none;border:0.5px solid #f7c1c1;color:#A32D2D;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer">ลบ</button></div></div><div class="record-meta">${fmtDate(c.date)} → คืน ${fmtDate(c.returnDate)}${c.dept?' · '+c.dept:''}</div></div>`).join('');
+}
+
+function renderRepairList(){
+  const el=document.getElementById('repair-list');
+  const items=[...data.repair_tool].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(items.length===0){ el.innerHTML='<div class="empty-state">ยังไม่มีรายการซ่อม</div>'; return; }
+  el.innerHTML=items.slice(0,40).map(r=>`<div class="record-item">
+    <div class="flex-between">
+      <div class="flex-center"><strong>${getToolName(r.toolId)}</strong><span class="badge bi">${r.type}</span></div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-weight:500">${fmt(r.amount)} ฿</span>
+        <button onclick="openEditModal('repair_tool','repair_tool','${r.id}')" class="btn-ghost btn-sm" style="padding:3px 9px;font-size:11px">แก้ไข</button>
+        <button onclick="deleteToolRecord('repair_tool','${r.id}')" style="background:none;border:0.5px solid #f7c1c1;color:#A32D2D;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer">ลบ</button>
+      </div>
+    </div>
+    <div class="record-meta">${fmtDate(r.date)}${r.shop?' · '+r.shop:''}</div>
+    ${r.detail?`<div class="record-meta">${r.detail}</div>`:''}
+    <span class="badge ${SB[r.statusAfter||'ok']}">${SL[r.statusAfter||'ok']}</span>
+  </div>`).join('');
+}
+
+async function deleteToolRecord(dataKey, id){
+  if(!confirm('ลบรายการนี้?')) return;
+  setSyncStatus('loading','กำลังลบ...');
+  try{
+    const r = await apiCall('delete', dataKey, {id});
+    if(r.error) throw new Error(r.error);
+    data[dataKey] = data[dataKey].filter(x=>x.id!==id);
+    setSyncStatus('ok','✓ ลบแล้ว');
+    if(dataKey==='repair_tool') renderRepairList();
+    if(dataKey==='checkout') renderCheckouts();
+    renderOverview(); renderToolsList();
+  }catch(e){ setSyncStatus('err','ลบไม่สำเร็จ'); }
+}
+
+// ── EDIT ──
+let editModal = { table:'', dataKey:'', id:'' };
+
+function openEditModal(table, dataKey, id){
+  const rec = data[dataKey].find(r=>r.id===id); if(!rec) return;
+  editModal = { table, dataKey, id };
+  const titles = { repair_tool:'แก้ไขการซ่อม', checkout:'แก้ไขการเบิก' };
+  document.getElementById('edit-modal-title').textContent = titles[dataKey]||'แก้ไข';
+  const toolOpts = data.tools.map(t=>`<option value="${t.id}" ${rec.toolId===t.id?'selected':''}>${t.name}${t.code?' ('+t.code+')':''}</option>`).join('');
+  let fields = '';
+  if(dataKey==='repair_tool'){
+    fields = `
+      <div class="field"><label>เครื่องมือ</label><select id="ef-toolId">${toolOpts}</select></div>
+      <div class="field"><label>วันที่ส่งซ่อม</label><input type="date" id="ef-date" value="${rec.date||''}"></div>
+      <div class="field"><label>ประเภทการซ่อม</label><select id="ef-type">${['ซ่อมแซม','เปลี่ยนอะไหล่','สอบเทียบ (Calibrate)','ทำความสะอาด','บำรุงรักษาตามกำหนด','อื่นๆ'].map(o=>`<option ${rec.type===o?'selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="field"><label>ค่าซ่อม (บาท)</label><input type="number" id="ef-amount" value="${rec.amount||''}"></div>
+      <div class="field"><label>รายละเอียด</label><textarea id="ef-detail">${rec.detail||''}</textarea></div>
+      <div class="field"><label>ร้าน/ช่าง</label><input type="text" id="ef-shop" value="${rec.shop||''}"></div>
+      <div class="field"><label>วันที่ซ่อมเสร็จ</label><input type="date" id="ef-done" value="${rec.done||''}"></div>
+      <div class="field"><label>สถานะหลังซ่อม</label><select id="ef-statusAfter"><option value="ok" ${rec.statusAfter==='ok'?'selected':''}>พร้อมใช้งาน</option><option value="repair" ${rec.statusAfter==='repair'?'selected':''}>ยังซ่อมอยู่</option><option value="broken" ${rec.statusAfter==='broken'?'selected':''}>ชำรุด/ไม่คุ้มซ่อม</option></select></div>`;
+  } else if(dataKey==='checkout'){
+    fields = `
+      <div class="field"><label>เครื่องมือ</label><select id="ef-toolId">${toolOpts}</select></div>
+      <div class="field"><label>ชื่อผู้เบิก</label><input type="text" id="ef-person" value="${rec.person||''}"></div>
+      <div class="field"><label>วันที่เบิก</label><input type="date" id="ef-date" value="${rec.date||''}"></div>
+      <div class="field"><label>กำหนดคืน</label><input type="date" id="ef-due" value="${rec.due||''}"></div>
+      <div class="field"><label>แผนก/โปรเจกต์</label><input type="text" id="ef-dept" value="${rec.dept||''}"></div>
+      <div class="field"><label>วัตถุประสงค์</label><input type="text" id="ef-purpose" value="${rec.purpose||''}"></div>
+      <div class="field"><label>หมายเหตุ</label><textarea id="ef-note">${rec.note||''}</textarea></div>`;
+  }
+  document.getElementById('edit-modal-body').innerHTML = fields;
+  openModal('modal-edit');
+}
+
+async function saveEdit(){
+  const { table, dataKey, id } = editModal;
+  const rec = data[dataKey].find(r=>r.id===id); if(!rec) return;
+  const updated = {...rec};
+  // collect all ef- fields
+  document.querySelectorAll('[id^="ef-"]').forEach(el=>{
+    const key = el.id.replace('ef-','');
+    updated[key] = el.value;
+  });
+  setSyncStatus('loading','กำลังบันทึก...');
+  try{
+    const r = await apiCall('upsert', table, {row: updated});
+    if(r.error) throw new Error(r.error);
+    const idx = data[dataKey].findIndex(x=>x.id===id);
+    if(idx>=0) data[dataKey][idx] = updated;
+    setSyncStatus('ok','✓ แก้ไขแล้ว');
+    closeModal('modal-edit');
+    if(dataKey==='repair_tool') renderRepairList();
+    if(dataKey==='checkout') renderCheckouts();
+    renderOverview(); renderToolsList();
+  }catch(e){ setSyncStatus('err','บันทึกไม่สำเร็จ'); }
+}
+
+async function deleteTool(id){
+  if(!confirm('ลบเครื่องมือนี้ออกจากระบบ?')) return;
+  setSyncStatus('loading','กำลังลบ...');
+  try{
+    const r = await apiCall('delete','tools',{id});
+    if(r.error) throw new Error(r.error);
+    data.tools = data.tools.filter(t=>t.id!==id);
+    deletePhotoLocal(id);
+    setSyncStatus('ok','✓ ลบแล้ว');
+    closeModal('modal-detail');
+    populateCatFilter(); renderToolsList(); renderOverview();
+  }catch(e){ setSyncStatus('err','ลบไม่สำเร็จ'); }
+}
+
+function renderOverview(){
+  const alerts=[];
+  data.checkout.filter(c=>!isReturned(c)&&c.due&&daysDiff(c.due)<0).forEach(c=>{ alerts.push(`<div class="alert-box alert-danger">⚠ <strong>${c.person}</strong> เบิก "${getToolName(c.toolId)}" เกินกำหนดคืนแล้ว ${Math.abs(daysDiff(c.due))} วัน</div>`); });
+  data.tools.filter(t=>t.warranty&&daysDiff(t.warranty)>=0&&daysDiff(t.warranty)<=30).forEach(t=>{ alerts.push(`<div class="alert-box alert-warning">🛡 ประกัน "${t.name}" หมดใน ${daysDiff(t.warranty)} วัน</div>`); });
+  document.getElementById('alert-area').innerHTML=alerts.join('');
+  if(data.tools.length===0){ document.getElementById('overview-content').innerHTML='<div class="empty-state">ยังไม่มีเครื่องมือ<br>กด "+ เพิ่มเครื่องมือ"</div>'; return; }
+  const sc={ok:0,out:0,repair:0,broken:0,retired:0};
+  data.tools.forEach(t=>{ const es=effectiveStatus(t); sc[es]=(sc[es]||0)+1; });
+  const totalRep=data.repair_tool.reduce((s,r)=>s+Number(r.amount||0),0);
+  const activeOut=data.checkout.filter(c=>!isReturned(c));
+  document.getElementById('overview-content').innerHTML=`
+    <div class="stat-grid"><div class="stat"><div class="stat-label">เครื่องมือทั้งหมด</div><div class="stat-value">${data.tools.length}</div><div class="stat-sub">รายการ</div></div><div class="stat"><div class="stat-label">ถูกเบิกออก</div><div class="stat-value" style="color:#185FA5">${sc.out}</div><div class="stat-sub">รายการ</div></div><div class="stat"><div class="stat-label">ชำรุด/ซ่อม</div><div class="stat-value" style="color:#854F0B">${sc.repair+sc.broken}</div><div class="stat-sub">รายการ</div></div><div class="stat"><div class="stat-label">ค่าซ่อมรวม</div><div class="stat-value">${fmt(totalRep)}</div><div class="stat-sub">บาท</div></div></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px"><span class="badge bs">พร้อมใช้ ${sc.ok}</span><span class="badge bi">ถูกเบิก ${sc.out}</span><span class="badge bw">ซ่อมอยู่ ${sc.repair}</span><span class="badge bd">ชำรุด ${sc.broken}</span><span class="badge bg">เลิกใช้ ${sc.retired}</span></div>
+    ${activeOut.length>0?`<p class="divider">รายการที่ถูกเบิกออก</p>${activeOut.sort((a,b)=>new Date(a.due||'9999')-new Date(b.due||'9999')).map(c=>{ const d=c.due?daysDiff(c.due):null; const ov=d!==null&&d<0; return `<div class="card" style="padding:12px 15px;margin-bottom:8px"><div class="flex-between"><div><strong>${getToolName(c.toolId)}</strong>${ov?` <span class="badge bd">เกินกำหนด ${Math.abs(d)} วัน</span>`:d!==null&&d<=3&&d>=0?` <span class="badge bw">คืนใน ${d} วัน</span>`:''}</div><button class="btn-primary btn-sm" onclick="returnTool('${c.id}')">คืนแล้ว</button></div><div class="record-meta"><strong>${c.person}</strong>${c.dept?' · '+c.dept:''}${c.due?' · กำหนดคืน '+fmtDate(c.due):''}</div></div>`; }).join('')}`:''}`;
+}
+
+function renderReport(){
+  const catMap={};
+  data.tools.forEach(t=>{ const c=t.cat||'อื่นๆ'; if(!catMap[c]) catMap[c]={count:0,repCost:0,broken:0,totalPrice:0}; catMap[c].count++; catMap[c].totalPrice+=Number(t.price||0); const es=effectiveStatus(t); if(es==='broken'||es==='repair') catMap[c].broken++; });
+  data.repair_tool.forEach(r=>{ const t=getTool(r.toolId); const c=t?t.cat||'อื่นๆ':'อื่นๆ'; if(!catMap[c]) catMap[c]={count:0,repCost:0,broken:0,totalPrice:0}; catMap[c].repCost+=Number(r.amount||0); });
+  const totalBuy=data.tools.reduce((s,t)=>s+Number(t.price||0),0);
+  const totalRep=data.repair_tool.reduce((s,r)=>s+Number(r.amount||0),0);
+  const toolRepCost=data.tools.map(t=>({t,cost:data.repair_tool.filter(r=>r.toolId===t.id).reduce((s,r)=>s+Number(r.amount||0),0),times:data.repair_tool.filter(r=>r.toolId===t.id).length})).filter(x=>x.cost>0).sort((a,b)=>b.cost-a.cost).slice(0,10);
+  document.getElementById('report-content').innerHTML=`
+    <div class="stat-grid"><div class="stat"><div class="stat-label">มูลค่าเครื่องมือรวม</div><div class="stat-value">${fmt(totalBuy)}</div><div class="stat-sub">บาท</div></div><div class="stat"><div class="stat-label">ค่าซ่อมรวม</div><div class="stat-value">${fmt(totalRep)}</div><div class="stat-sub">บาท</div></div><div class="stat"><div class="stat-label">รายการเบิกทั้งหมด</div><div class="stat-value">${data.checkout.length}</div><div class="stat-sub">ครั้ง</div></div><div class="stat"><div class="stat-label">เกินกำหนดคืน</div><div class="stat-value" style="color:#A32D2D">${data.checkout.filter(c=>!isReturned(c)&&c.due&&daysDiff(c.due)<0).length}</div><div class="stat-sub">รายการ</div></div></div>
+    <div class="card" style="margin-bottom:12px"><div class="card-title">สรุปตามหมวดหมู่</div><div style="overflow-x:auto"><table class="rep-table"><thead><tr><th>หมวดหมู่</th><th class="num">จำนวน</th><th class="num">มูลค่า (฿)</th><th class="num">ชำรุด/ซ่อม</th><th class="num">ค่าซ่อมรวม (฿)</th></tr></thead><tbody>${Object.entries(catMap).map(([c,v])=>`<tr><td>${c}</td><td class="num">${v.count}</td><td class="num">${fmt(v.totalPrice)}</td><td class="num">${v.broken>0?`<span class="badge bd">${v.broken}</span>`:'0'}</td><td class="num">${fmt(v.repCost)}</td></tr>`).join('')}</tbody><tfoot><tr style="border-top:1px solid #eee"><td><strong>รวม</strong></td><td class="num">${data.tools.length}</td><td class="num">${fmt(totalBuy)}</td><td class="num">${data.tools.filter(t=>['repair','broken'].includes(effectiveStatus(t))).length}</td><td class="num"><strong>${fmt(totalRep)}</strong></td></tr></tfoot></table></div></div>
+    ${toolRepCost.length>0?`<div class="card"><div class="card-title">เครื่องมือที่มีค่าซ่อมสูงสุด</div><table class="rep-table"><thead><tr><th>เครื่องมือ</th><th>หมวด</th><th class="num">ครั้งที่ซ่อม</th><th class="num">ค่าซ่อมรวม (฿)</th></tr></thead><tbody>${toolRepCost.map(({t,cost,times})=>`<tr><td>${t.name}${t.code?' <span class="badge bg">'+t.code+'</span>':''}</td><td style="color:#888">${t.cat||''}</td><td class="num">${times}</td><td class="num"><strong>${fmt(cost)}</strong></td></tr>`).join('')}</tbody></table></div>`:''}`;
+}
+
+function exportCSV(){
+  const rows=[['ประเภท','ชื่อเครื่องมือ','รหัส','หมวดหมู่','วันที่','รายละเอียด','ยอดเงิน','บุคคล','สถานะ']];
+  data.tools.forEach(t=>rows.push(['เครื่องมือ',t.name,t.code||'',t.cat||'',t.bought||'',[t.brand,t.serial].filter(Boolean).join(' '),t.price||0,'',SL[t.status||'ok']]));
+  data.checkout.forEach(c=>rows.push(['เบิก',getToolName(c.toolId),'','',c.date,c.purpose||'','',c.person,(c.returned==='true'||c.returned===true)?'คืนแล้ว':'ยังไม่คืน']));
+  data.repair_tool.forEach(r=>rows.push(['ซ่อม',getToolName(r.toolId),'','',r.date,r.type+(r.detail?' - '+r.detail:''),r.amount||0,r.shop||'',SL[r.statusAfter||'ok']]));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`tool_log_${today}.csv`; a.click();
+}
+
+['co-date','rep-date'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=today; });
+loadAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สมุดบันทึกรถบริษัท</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f4f4f1;color:#1a1a18;font-size:15px;line-height:1.5}
+.header{background:#fff;border-bottom:0.5px solid #ddd;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.header h1{font-size:17px;font-weight:600}
+.header p{font-size:11px;color:#888;margin-top:1px}
+.hbtns{display:flex;gap:8px;flex-shrink:0;align-items:center}
+.sync-status{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.sync-ok{background:#EAF3DE;color:#3B6D11}
+.sync-err{background:#FCEBEB;color:#A32D2D}
+.sync-loading{background:#f0f0ee;color:#666}
+.btn-primary{background:#1a1a18;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500}
+.btn-primary:hover{background:#333}
+.btn-ghost{background:none;border:0.5px solid #bbb;border-radius:8px;padding:7px 13px;font-size:13px;cursor:pointer;color:#1a1a18}
+.btn-ghost:hover{background:#f0f0ee}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
+.tabs{background:#fff;display:flex;padding:0 16px;border-bottom:0.5px solid #ddd;overflow-x:auto}
+.tab{padding:11px 14px;font-size:13px;color:#888;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;flex-shrink:0}
+.tab.active{color:#1a1a18;border-bottom-color:#1a1a18;font-weight:500}
+.content{max-width:740px;margin:18px auto;padding:0 14px 60px}
+.section{display:none}.section.active{display:block}
+.card{background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:500;margin-bottom:14px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-bottom:11px}
+.row-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:11px;margin-bottom:11px}
+.field{margin-bottom:11px}
+label{font-size:11px;color:#777;display:block;margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px}
+input,select,textarea{width:100%;font-size:13px;padding:8px 10px;border:0.5px solid #ccc;border-radius:7px;background:#fff;color:#1a1a18}
+textarea{resize:vertical;min-height:65px}
+input:focus,select:focus,textarea:focus{outline:2px solid #1a1a18;outline-offset:0;border-color:transparent}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.section-title{font-size:16px;font-weight:500}
+.divider{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:0.6px;margin:16px 0 8px;font-weight:600}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.bd{background:#FCEBEB;color:#A32D2D}.bw{background:#FAEEDA;color:#854F0B}
+.bs{background:#EAF3DE;color:#3B6D11}.bi{background:#E6F1FB;color:#185FA5}
+.bg{background:#f0f0ee;color:#666}.bp{background:#FBEAF0;color:#993556}
+.record-item{border-bottom:0.5px solid #eee;padding:10px 0}
+.record-item:last-child{border-bottom:none}
+.record-meta{font-size:12px;color:#999;margin-top:2px}
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+.flex-center{display:flex;align-items:center;gap:8px}
+.stat-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+.stat-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
+.stat{background:#f4f4f1;border-radius:8px;padding:11px 13px}
+.stat-label{font-size:11px;color:#888;margin-bottom:3px}
+.stat-value{font-size:19px;font-weight:600;color:#1a1a18}
+.stat-sub{font-size:11px;color:#aaa;margin-top:1px}
+.alert-box{border-radius:8px;padding:9px 13px;font-size:13px;margin-bottom:8px}
+.alert-danger{background:#FCEBEB;color:#A32D2D;border:0.5px solid #f7c1c1}
+.alert-warning{background:#FAEEDA;color:#854F0B;border:0.5px solid #FAC775}
+.empty-state{text-align:center;padding:2rem;color:#bbb;font-size:13px}
+.loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.85);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.spinner{width:32px;height:32px;border:3px solid #eee;border-top-color:#1a1a18;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:200;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal{background:#fff;border-radius:14px;padding:22px;width:480px;max-width:95vw;margin:auto;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:500;margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.chart-bar-wrap{margin:6px 0}
+.chart-label{font-size:11px;color:#888;margin-bottom:2px}
+.chart-bar-bg{background:#f0f0ee;border-radius:4px;height:14px;overflow:hidden}
+.chart-bar{height:100%;border-radius:4px}
+table.report-table{width:100%;font-size:13px;border-collapse:collapse}
+table.report-table th{text-align:left;padding:7px 10px;font-size:11px;color:#888;font-weight:600;text-transform:uppercase;border-bottom:0.5px solid #eee}
+table.report-table td{padding:8px 10px;border-bottom:0.5px solid #f5f5f2}
+.num{text-align:right}
+.alert-count{background:#A32D2D;color:#fff;font-size:10px;border-radius:10px;padding:1px 5px;margin-left:4px;font-weight:700}
+.notify-card{border-radius:10px;padding:13px 16px;margin-bottom:9px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.notify-expired{background:#FCEBEB;border:0.5px solid #f7c1c1}
+.notify-urgent{background:#FEF3EC;border:0.5px solid #f7c1c1}
+.notify-soon{background:#FAEEDA;border:0.5px solid #FAC775}
+.notify-ok{background:#EAF3DE;border:0.5px solid #C0DD97}
+.notify-days-badge{font-size:22px;font-weight:700;min-width:48px;text-align:center;line-height:1.1}
+.notify-days-badge small{display:block;font-size:10px;font-weight:500}
+@media(max-width:540px){.row,.row-3,.row-4{grid-template-columns:1fr}.stat-grid-4,.stat-grid-3{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div id="loading-overlay" class="loading-overlay">
+  <div class="spinner"></div>
+  <div style="font-size:14px;color:#666">กำลังโหลดข้อมูลจาก Google Sheets...</div>
+</div>
+
+<div class="header">
+  <div>
+    <h1>สมุดบันทึกรถบริษัท</h1>
+    <p>ข้อมูลเชื่อมกับ Google Sheets — ใช้ร่วมกันได้ทุกเครื่อง</p>
+  </div>
+  <div class="hbtns">
+    <span id="sync-status" class="sync-status sync-loading">กำลังเชื่อมต่อ...</span>
+    <button class="btn-ghost btn-sm" onclick="loadAll()">🔄 Refresh</button>
+    <button class="btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
+    <button class="btn-primary btn-sm" onclick="openModal('modal-car')">+ เพิ่มรถ</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('overview',this)">ภาพรวม</button>
+  <button class="tab" onclick="switchTab('notify',this)">🔔 แจ้งเตือน <span id="alert-badge" style="display:none" class="alert-count">0</span></button>
+  <button class="tab" onclick="switchTab('tax',this)">ภาษีรถ</button>
+  <button class="tab" onclick="switchTab('insurance',this)">ประกันภัย</button>
+  <button class="tab" onclick="switchTab('oil',this)">น้ำมันเครื่อง</button>
+  <button class="tab" onclick="switchTab('fuel',this)">เติมน้ำมัน</button>
+  <button class="tab" onclick="switchTab('repair',this)">ซ่อมบำรุง</button>
+  <button class="tab" onclick="switchTab('trip',this)">บันทึกเที่ยว</button>
+  <button class="tab" onclick="switchTab('report',this)">รายงาน</button>
+</div>
+
+<div class="content">
+
+<div class="section active" id="tab-overview">
+  <div id="alert-area"></div>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+    <span style="font-size:12px;color:#888">กรองตาม:</span>
+    <select id="owner-filter" onchange="renderOverview()" style="font-size:13px;padding:5px 10px;width:auto;border-radius:7px;border:0.5px solid #ccc">
+      <option value="all">รถทั้งหมด</option>
+    </select>
+  </div>
+  <div id="overview-content"><div class="empty-state">กำลังโหลด...</div></div>
+</div>
+
+<div class="section" id="tab-notify">
+  <div class="section-header">
+    <span class="section-title">🔔 แจ้งเตือนทั้งหมด</span>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span style="font-size:12px;color:#888">แสดงภายใน</span>
+      <select id="notify-days" onchange="renderNotify()" style="font-size:12px;padding:4px 8px;width:auto">
+        <option value="30">30 วัน</option>
+        <option value="60" selected>60 วัน</option>
+        <option value="90">90 วัน</option>
+        <option value="180">180 วัน</option>
+      </select>
+    </div>
+  </div>
+  <div id="notify-content"></div>
+</div>
+
+<div class="section" id="tab-tax">
+  <div class="section-header"><span class="section-title">ภาษีรถ</span></div>
+  <div class="card">
+    <div class="row"><div><label>เลือกรถ</label><select id="tax-car"></select></div><div><label>วันที่ชำระ</label><input type="date" id="tax-date"></div></div>
+    <div class="row"><div><label>วันหมดอายุภาษี</label><input type="date" id="tax-expiry"></div><div><label>ยอดเงิน (บาท)</label><input type="number" id="tax-amount" placeholder="0"></div></div>
+    <div class="field"><label>🔗 ลิงก์รูปบิล (Google Drive)</label><input type="text" id="tax-drive" placeholder="วางลิงก์ Google Drive ที่นี่"></div>
+    <div class="field"><label>หมายเหตุ</label><textarea id="tax-note" placeholder="บันทึกเพิ่มเติม..."></textarea></div>
+    <button class="btn-primary" onclick="saveTax()">บันทึก</button>
+  </div>
+  <p class="divider">รายการล่าสุด</p>
+  <div id="tax-list" class="card"></div>
+</div>
+
+<div class="section" id="tab-insurance">
+  <div class="section-header"><span class="section-title">ประกันภัยรถ</span></div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:10px;font-size:14px">ข้อมูลกรมธรรม์</div>
+    <div class="row"><div><label>เลือกรถ</label><select id="ins-car"></select></div><div><label>ชั้นประกัน</label><select id="ins-type"><option>ชั้น 1</option><option>ชั้น 2+</option><option>ชั้น 2</option><option>ชั้น 3+</option><option>ชั้น 3</option><option>พ.ร.บ. เท่านั้น</option></select></div></div>
+    <div class="row"><div><label>บริษัทประกัน</label><input type="text" id="ins-company" placeholder="เช่น AXA, Viriyah"></div><div><label>เลขกรมธรรม์</label><input type="text" id="ins-policy" placeholder="กรมธรรม์เลขที่"></div></div>
+    <div class="row"><div><label>วันเริ่มคุ้มครอง</label><input type="date" id="ins-start"></div><div><label>วันหมดอายุ</label><input type="date" id="ins-expiry"></div></div>
+    <div class="row"><div><label>ยอดเบี้ยประกัน (บาท)</label><input type="number" id="ins-amount" placeholder="0"></div><div><label>ทุนประกัน (บาท)</label><input type="number" id="ins-coverage" placeholder="0"></div></div>
+    <div style="border-top:0.5px solid #eee;margin:12px 0"></div>
+    <div class="card-title" style="margin-bottom:10px;font-size:14px">ข้อมูลตัวแทน</div>
+    <div class="row"><div><label>ชื่อตัวแทน</label><input type="text" id="ins-agent-name" placeholder="ชื่อผู้ขายประกัน"></div><div><label>เบอร์โทรตัวแทน</label><input type="text" id="ins-agent-phone" placeholder="08x-xxx-xxxx"></div></div>
+    <div class="row"><div><label>Line / Email ตัวแทน</label><input type="text" id="ins-agent-line" placeholder="@lineID หรืออีเมล"></div><div><label>บริษัทนายหน้า</label><input type="text" id="ins-agent-broker" placeholder="ถ้ามี"></div></div>
+    <div style="border-top:0.5px solid #eee;margin:12px 0"></div>
+    <div class="card-title" style="margin-bottom:10px;font-size:14px">เบอร์ฉุกเฉิน</div>
+    <div class="row"><div><label>เบอร์แจ้งอุบัติเหตุ</label><input type="text" id="ins-hotline" placeholder="เช่น 02-xxx-xxxx ตลอด 24 ชม."></div><div><label>เบอร์รถลาก</label><input type="text" id="ins-tow" placeholder="เบอร์รถลากฉุกเฉิน"></div></div>
+    <div class="row"><div><label>เบอร์สำรองบริษัท</label><input type="text" id="ins-backup-phone" placeholder="เบอร์ HR/ผู้ดูแลรถ"></div></div>
+    <div class="field"><label>ขั้นตอนเมื่อเกิดอุบัติเหตุ</label><textarea id="ins-accident-steps" placeholder="เช่น 1) โทรแจ้ง ... 2) ถ่ายรูป ..."></textarea></div>
+    <div style="border-top:0.5px solid #eee;margin:12px 0"></div>
+    <div class="field"><label>🔗 ลิงก์กรมธรรม์ / บิล (Google Drive)</label><input type="text" id="ins-drive" placeholder="วางลิงก์ Google Drive ที่นี่"></div>
+    <div class="field"><label>หมายเหตุ</label><textarea id="ins-note" placeholder="บันทึกเพิ่มเติม..."></textarea></div>
+    <button class="btn-primary" onclick="saveInsurance()">บันทึก</button>
+  </div>
+  <p class="divider">รายการล่าสุด</p>
+  <div id="ins-list" class="card"></div>
+</div>
+
+<div class="section" id="tab-oil">
+  <div class="section-header"><span class="section-title">เปลี่ยนน้ำมันเครื่อง</span></div>
+  <div class="card">
+    <div class="row"><div><label>เลือกรถ</label><select id="oil-car"></select></div><div><label>วันที่เปลี่ยน</label><input type="date" id="oil-date"></div></div>
+    <div class="row-3"><div><label>เลขไมล์ปัจจุบัน (กม.)</label><input type="number" id="oil-km" placeholder="0"></div><div><label>เปลี่ยนครั้งหน้า (กม.)</label><input type="number" id="oil-next-km" placeholder="0"></div><div><label>ยอดเงิน (บาท)</label><input type="number" id="oil-amount" placeholder="0"></div></div>
+    <div class="row"><div><label>ยี่ห้อน้ำมัน</label><input type="text" id="oil-brand" placeholder="เช่น Castrol, Mobil 1"></div><div><label>เกรดน้ำมัน</label><input type="text" id="oil-grade" placeholder="เช่น 5W-30"></div></div>
+    <div class="row"><div><label>ร้าน/ศูนย์</label><input type="text" id="oil-shop" placeholder="ชื่อร้าน"></div><div><label>ไส้กรองน้ำมัน</label><select id="oil-filter"><option value="">ไม่ได้เปลี่ยน</option><option value="1">เปลี่ยนด้วย</option></select></div></div>
+    <div class="field"><label>🔗 ลิงก์รูปบิล (Google Drive)</label><input type="text" id="oil-drive" placeholder="วางลิงก์ Google Drive ที่นี่"></div>
+    <div class="field"><label>หมายเหตุ</label><textarea id="oil-note" placeholder="บันทึกเพิ่มเติม..."></textarea></div>
+    <button class="btn-primary" onclick="saveOil()">บันทึก</button>
+  </div>
+  <p class="divider">รายการล่าสุด</p>
+  <div id="oil-list" class="card"></div>
+</div>
+
+<div class="section" id="tab-fuel">
+  <div class="section-header"><span class="section-title">บันทึกการเติมน้ำมัน</span></div>
+  <div class="card">
+    <div class="row"><div><label>เลือกรถ</label><select id="fuel-car"></select></div><div><label>วันที่เติม</label><input type="date" id="fuel-date"></div></div>
+    <div class="row-4"><div><label>ประเภทน้ำมัน</label><select id="fuel-type"><option>ดีเซล B7</option><option>ดีเซล B10</option><option>ดีเซล B20</option><option>เบนซิน 91</option><option>เบนซิน 95</option><option>E20</option><option>E85</option><option>แก๊ส NGV</option></select></div><div><label>จำนวนลิตร</label><input type="number" id="fuel-liter" placeholder="0" step="0.01"></div><div><label>ราคา/ลิตร (บาท)</label><input type="number" id="fuel-price" placeholder="0" step="0.01" oninput="calcFuel()"></div><div><label>ยอดเงินรวม (บาท)</label><input type="number" id="fuel-total" placeholder="0" step="0.01"></div></div>
+    <div class="row"><div><label>เลขไมล์ (กม.)</label><input type="number" id="fuel-km" placeholder="0"></div><div><label>สถานีน้ำมัน</label><input type="text" id="fuel-station" placeholder="เช่น PTT, Shell"></div></div>
+    <div class="field"><label>🔗 ลิงก์รูปสลิป (Google Drive)</label><input type="text" id="fuel-drive" placeholder="วางลิงก์ Google Drive ที่นี่"></div>
+    <button class="btn-primary" onclick="saveFuel()">บันทึก</button>
+  </div>
+  <p class="divider">รายการล่าสุด</p>
+  <div id="fuel-list" class="card"></div>
+</div>
+
+<div class="section" id="tab-repair">
+  <div class="section-header"><span class="section-title">ซ่อมบำรุง</span></div>
+  <div class="card">
+    <div class="row"><div><label>เลือกรถ</label><select id="repair-car"></select></div><div><label>วันที่ซ่อม</label><input type="date" id="repair-date"></div></div>
+    <div class="row"><div><label>ประเภทการซ่อม</label><select id="repair-type"><option>ซ่อมเครื่องยนต์</option><option>ซ่อมเกียร์</option><option>ระบบเบรก</option><option>ระบบไฟฟ้า</option><option>ยาง/ล้อ</option><option>แอร์</option><option>ระบบกันสะเทือน</option><option>ตัวถัง/สี</option><option>บำรุงรักษาตามระยะ</option><option>อื่นๆ</option></select></div><div><label>ยอดเงินรวม (บาท)</label><input type="number" id="repair-amount" placeholder="0"></div></div>
+    <div class="field"><label>รายละเอียดการซ่อม</label><textarea id="repair-detail" placeholder="อธิบายสิ่งที่ซ่อม/เปลี่ยน..."></textarea></div>
+    <div class="row"><div><label>ร้าน/อู่ซ่อม</label><input type="text" id="repair-shop" placeholder="ชื่อร้าน"></div><div><label>เลขไมล์ (กม.)</label><input type="number" id="repair-km" placeholder="0"></div></div>
+    <div class="field"><label>🔗 ลิงก์รูปบิลซ่อม (Google Drive)</label><input type="text" id="repair-drive" placeholder="วางลิงก์ Google Drive ที่นี่"></div>
+    <button class="btn-primary" onclick="saveRepair()">บันทึก</button>
+  </div>
+  <p class="divider">รายการล่าสุด</p>
+  <div id="repair-list" class="card"></div>
+</div>
+
+<div class="section" id="tab-trip">
+  <div class="section-header"><span class="section-title">บันทึกเที่ยวการเดินทาง</span></div>
+  <div class="card">
+    <div class="row"><div><label>เลือกรถ</label><select id="trip-car"></select></div><div><label>วันที่</label><input type="date" id="trip-date"></div></div>
+    <div class="row"><div><label>คนขับ</label><input type="text" id="trip-driver" placeholder="ชื่อคนขับ"></div><div><label>วัตถุประสงค์</label><select id="trip-purpose"><option>ติดต่องาน</option><option>รับส่งผู้บริหาร</option><option>ขนส่งสินค้า</option><option>อบรม/สัมมนา</option><option>ซ่อมบำรุง</option><option>อื่นๆ</option></select></div></div>
+    <div class="row"><div><label>ต้นทาง</label><input type="text" id="trip-from" placeholder="สถานที่ต้นทาง"></div><div><label>ปลายทาง</label><input type="text" id="trip-to" placeholder="สถานที่ปลายทาง"></div></div>
+    <div class="row-3"><div><label>ไมล์ก่อนออก (กม.)</label><input type="number" id="trip-km-start" placeholder="0"></div><div><label>ไมล์หลังกลับ (กม.)</label><input type="number" id="trip-km-end" placeholder="0"></div><div><label>ค่าใช้จ่าย (บาท)</label><input type="number" id="trip-cost" placeholder="0"></div></div>
+    <div class="field"><label>หมายเหตุ</label><textarea id="trip-note" placeholder="บันทึกเพิ่มเติม..."></textarea></div>
+    <button class="btn-primary" onclick="saveTrip()">บันทึก</button>
+  </div>
+  <p class="divider">รายการล่าสุด</p>
+  <div id="trip-list" class="card"></div>
+</div>
+
+<div class="section" id="tab-report">
+  <div class="section-header">
+    <span class="section-title">รายงานค่าใช้จ่าย</span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select id="rep-year" onchange="renderReport()" style="font-size:13px;padding:5px 8px;width:auto"></select>
+      <select id="rep-car" onchange="renderReport()" style="font-size:13px;padding:5px 8px;width:auto"></select>
+      <button class="btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
+    </div>
+  </div>
+  <div id="report-content"></div>
+</div>
+
+</div><!-- end content -->
+
+<!-- MODAL: Edit Record -->
+<div class="modal-bg" id="modal-edit">
+  <div class="modal" style="width:500px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title" id="edit-modal-title">แก้ไข</div>
+    <div id="edit-modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-edit')">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveEdit()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add Car -->
+<div class="modal-bg" id="modal-car">
+  <div class="modal">
+    <div class="modal-title">เพิ่มรถใหม่</div>
+    <div class="field"><label>ชื่อ / ทะเบียนรถ *</label><input type="text" id="new-car-name" placeholder="เช่น Toyota Camry กข-1234"></div>
+    <div class="row"><div><label>ยี่ห้อ</label><input type="text" id="new-car-make" placeholder="Toyota"></div><div><label>รุ่น</label><input type="text" id="new-car-model" placeholder="Camry"></div></div>
+    <div class="row"><div><label>ปี (พ.ศ.)</label><input type="number" id="new-car-year" placeholder="2567"></div><div><label>สี</label><input type="text" id="new-car-color" placeholder="ดำ"></div></div>
+    <div class="row"><div><label>เลขทะเบียน</label><input type="text" id="new-car-plate" placeholder="กข-1234 กรุงเทพ"></div><div><label>เลขตัวถัง (VIN)</label><input type="text" id="new-car-vin" placeholder="ไม่บังคับ"></div></div>
+    <div class="row">
+      <div><label>ประเภทยานพาหนะ</label>
+        <select id="new-car-vehicle-type">
+          <option value="car">🚗 รถยนต์</option>
+          <option value="pickup">🛻 รถกระบะ</option>
+          <option value="van">🚐 รถตู้/ไมโครบัส</option>
+          <option value="truck">🚚 รถบรรทุก</option>
+          <option value="motorcycle">🏍 มอเตอร์ไซค์</option>
+          <option value="other">🚙 อื่นๆ</option>
+        </select>
+      </div>
+      <div><label>สถานะรถ</label>
+        <select id="new-car-vehicle-status">
+          <option value="active">ใช้งานอยู่</option>
+          <option value="broken">ชำรุด/ซ่อม</option>
+          <option value="sold">ขายแล้ว</option>
+          <option value="retired">ปลดระวาง</option>
+        </select>
+      </div>
+    </div>
+    <div style="border-top:0.5px solid #eee;margin:12px 0"></div>
+    <div class="row">
+      <div><label>ประเภทเจ้าของ</label>
+        <select id="new-car-owner-type" onchange="toggleOwnerFields()">
+          <option value="company">รถบริษัท</option>
+          <option value="personal">รถส่วนตัว</option>
+        </select>
+      </div>
+      <div id="owner-company-wrap"><label>บริษัทเจ้าของ</label>
+        <select id="new-car-company" onchange="handleCompanySelect()">
+          <option value="">-- เลือกบริษัท --</option>
+          <option value="บริษัท 1">บริษัท 1</option>
+          <option value="บริษัท 2">บริษัท 2</option>
+          <option value="custom">➕ เพิ่มบริษัทใหม่...</option>
+        </select>
+      </div>
+    </div>
+    <div id="owner-custom-wrap" style="display:none;margin-bottom:11px"><label>ชื่อบริษัทใหม่</label><input type="text" id="new-car-company-custom" placeholder="พิมพ์ชื่อบริษัท"></div>
+    <div id="owner-personal-wrap" style="display:none;margin-bottom:11px"><label>ชื่อเจ้าของ (รถส่วนตัว)</label><input type="text" id="new-car-owner-name" placeholder="ชื่อ-นามสกุลเจ้าของ"></div>
+    <div style="border-top:0.5px solid #eee;margin:12px 0"></div>
+    <div class="card-title" style="font-size:13px;margin-bottom:8px">📎 เอกสารประจำรถ (Google Drive Links)</div>
+    <div class="field"><label>สมุดทะเบียนรถ</label><input type="text" id="new-car-doc-reg" placeholder="ลิงก์ Google Drive สมุดทะเบียน"></div>
+    <div class="field"><label>กรมธรรม์ประกัน / พ.ร.บ.</label><input type="text" id="new-car-doc-ins" placeholder="ลิงก์ Google Drive กรมธรรม์"></div>
+    <div class="field"><label>เอกสารอื่นๆ</label><input type="text" id="new-car-doc-other" placeholder="ลิงก์อื่นๆ (คั่นด้วย comma ถ้ามีหลายไฟล์)"></div>
+    <div class="modal-actions"><button class="btn-ghost" onclick="closeModal('modal-car')">ยกเลิก</button><button class="btn-primary" onclick="addCar()">เพิ่มรถ</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Edit Car -->
+<div class="modal-bg" id="modal-edit-car">
+  <div class="modal" style="width:500px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title">✏️ แก้ไขข้อมูลรถ</div>
+    <input type="hidden" id="edit-car-id">
+    <div class="field"><label>ชื่อ / ทะเบียนรถ *</label><input type="text" id="ec-name"></div>
+    <div class="row"><div><label>ยี่ห้อ</label><input type="text" id="ec-make"></div><div><label>รุ่น</label><input type="text" id="ec-model"></div></div>
+    <div class="row"><div><label>ปี (พ.ศ.)</label><input type="number" id="ec-year"></div><div><label>สี</label><input type="text" id="ec-color"></div></div>
+    <div class="row"><div><label>เลขทะเบียน</label><input type="text" id="ec-plate"></div><div><label>เลขตัวถัง (VIN)</label><input type="text" id="ec-vin"></div></div>
+    <div class="row">
+      <div><label>ประเภทยานพาหนะ</label>
+        <select id="ec-vehicle-type">
+          <option value="car">🚗 รถยนต์</option>
+          <option value="pickup">🛻 รถกระบะ</option>
+          <option value="van">🚐 รถตู้/ไมโครบัส</option>
+          <option value="truck">🚚 รถบรรทุก</option>
+          <option value="motorcycle">🏍 มอเตอร์ไซค์</option>
+          <option value="other">🚙 อื่นๆ</option>
+        </select>
+      </div>
+      <div><label>สถานะรถ</label>
+        <select id="ec-vehicle-status">
+          <option value="active">ใช้งานอยู่</option>
+          <option value="broken">ชำรุด/ซ่อม</option>
+          <option value="sold">ขายแล้ว</option>
+          <option value="retired">ปลดระวาง</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div><label>ประเภทเจ้าของ</label>
+        <select id="ec-owner-type">
+          <option value="company">รถบริษัท</option>
+          <option value="personal">รถส่วนตัว</option>
+        </select>
+      </div>
+      <div><label>ชื่อบริษัท / เจ้าของ</label><input type="text" id="ec-owner" placeholder="ชื่อบริษัทหรือเจ้าของ"></div>
+    </div>
+    <div style="border-top:0.5px solid #eee;margin:12px 0"></div>
+    <div style="font-size:13px;font-weight:500;margin-bottom:8px">📎 เอกสารประจำรถ (Google Drive Links)</div>
+    <div class="field"><label>สมุดทะเบียนรถ</label><input type="text" id="ec-doc-reg" placeholder="ลิงก์ Google Drive"></div>
+    <div class="field"><label>กรมธรรม์ / พ.ร.บ.</label><input type="text" id="ec-doc-ins" placeholder="ลิงก์ Google Drive"></div>
+    <div class="field"><label>เอกสารอื่นๆ</label><input type="text" id="ec-doc-other" placeholder="ลิงก์อื่นๆ (คั่นด้วย comma)"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-edit-car')">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveEditCar()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Car Detail -->
+<div class="modal-bg" id="modal-car-detail">
+  <div class="modal" style="width:560px;max-height:92vh;overflow-y:auto">
+    <div id="car-detail-content"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-car-detail')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbxPrO1WQKZwyrGMIW6KBNUoyCSUDBdciBQWahpScvWeKAONEnSFj614eQEZD4EzT3jYbQ/exec';
+
+let data = { cars:[], tax:[], insurance:[], oil:[], fuel:[], repair_car:[], trip:[] };
+const fmt = n => Number(n||0).toLocaleString('th-TH');
+const fmt1 = n => Number(n||0).toFixed(1);
+function fmtDate(d){
+  if(!d||d===''||d==='undefined'||d==='null') return '-';
+  try{
+    let dt;
+    if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(d)){
+      const [m,day,y]=d.split('/'); dt=new Date(y,m-1,day);
+    } else { dt=new Date(d.includes('T')?d:d+'T00:00:00'); }
+    if(isNaN(dt.getTime())) return d;
+    return dt.toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'});
+  }catch(e){ return d; }
+}
+function daysDiff(ds){
+  try{
+    let dt;
+    if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(ds)){
+      const [m,day,y]=ds.split('/'); dt=new Date(y,m-1,day);
+    } else { dt=new Date(ds+'T00:00:00'); }
+    return Math.ceil((dt-new Date())/86400000);
+  }catch(e){ return 9999; }
+}
+function getCarName(id){ const c=data.cars.find(c=>c.id===id); return c?c.name:id; }
+const today = new Date().toISOString().split('T')[0];
+
+// ── API CALLS ──
+async function apiCall(action, table, payload){
+  const body = { action, table, ...payload };
+  const res = await fetch(API, {
+    method:'POST',
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+function setSyncStatus(state, msg){
+  const el = document.getElementById('sync-status');
+  el.className = 'sync-status sync-' + state;
+  el.textContent = msg;
+}
+
+async function loadAll(){
+  setSyncStatus('loading','กำลังโหลด...');
+  document.getElementById('loading-overlay').style.display='flex';
+  try {
+    const res = await fetch(API + '?action=getAll');
+    const d = await res.json();
+    if(d.error) throw new Error(d.error);
+    // map sheet keys to local keys
+    data.cars      = d.cars      || [];
+    data.tax       = d.tax       || [];
+    data.insurance = d.insurance || [];
+    data.oil       = d.oil       || [];
+    data.fuel      = d.fuel      || [];
+    data.repair_car= d.repair_car|| [];
+    data.trip      = d.trip      || [];
+    setSyncStatus('ok','✓ ซิงค์แล้ว ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}));
+    populateSelects();
+    populateOwnerFilter();
+    renderOverview();
+    renderCurrentTab();
+  } catch(e){
+    setSyncStatus('err','เชื่อมต่อไม่ได้');
+    console.error(e);
+  }
+  document.getElementById('loading-overlay').style.display='none';
+}
+
+async function pushRow(table, row){
+  setSyncStatus('loading','กำลังบันทึก...');
+  try {
+    const r = await apiCall('upsert', table, { row });
+    if(r.error) throw new Error(r.error);
+    setSyncStatus('ok','✓ บันทึกแล้ว');
+    return true;
+  } catch(e){
+    setSyncStatus('err','บันทึกไม่สำเร็จ: '+e.message);
+    return false;
+  }
+}
+
+// ── TABS ──
+let currentTab = 'overview';
+function switchTab(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+  currentTab = id;
+  populateSelects();
+  renderCurrentTab();
+}
+
+function renderCurrentTab(){
+  const id = currentTab;
+  if(id==='overview') renderOverview();
+  if(id==='notify') renderNotify();
+  if(id==='tax') renderList('tax');
+  if(id==='insurance') renderList('insurance');
+  if(id==='oil') renderList('oil');
+  if(id==='fuel') renderList('fuel');
+  if(id==='repair') renderList('repair_car');
+  if(id==='trip') renderList('trip');
+  if(id==='report'){ populateReportSelects(); renderReport(); }
+}
+
+// ── NOTIFICATIONS ──
+function buildAlerts(){
+  const items = [];
+  const taxSeen = new Set();
+  [...data.tax].sort((a,b)=>new Date(b.expiry)-new Date(a.expiry)).forEach(t=>{
+    if(taxSeen.has(t.carId)) return; taxSeen.add(t.carId);
+    const d = daysDiff(t.expiry);
+    items.push({ type:'ภาษีรถ', icon:'🚗', car:getCarName(t.carId), expiry:t.expiry, days:d });
+  });
+  const insSeen = new Set();
+  [...data.insurance].sort((a,b)=>new Date(b.expiry)-new Date(a.expiry)).forEach(t=>{
+    const key = t.carId+'|'+t.type;
+    if(insSeen.has(key)) return; insSeen.add(key);
+    const d = daysDiff(t.expiry);
+    const agent = t.agentName ? ` (ตัวแทน: ${t.agentName}${t.agentPhone?' โทร '+t.agentPhone:''})` : '';
+    const hotline = t.hotline ? ` เบอร์แจ้งเหตุ: ${t.hotline}` : '';
+    items.push({ type:'ประกัน'+t.type, icon:'🛡', car:getCarName(t.carId), expiry:t.expiry, days:d, extra: agent+hotline });
+  });
+  return items.sort((a,b)=>a.days-b.days);
+}
+
+function notifyCardClass(d){
+  if(d < 0) return 'notify-expired';
+  if(d <= 14) return 'notify-urgent';
+  if(d <= 30) return 'notify-soon';
+  return 'notify-ok';
+}
+function notifyDaysColor(d){
+  if(d < 0) return '#A32D2D';
+  if(d <= 14) return '#cc4e00';
+  if(d <= 30) return '#854F0B';
+  return '#3B6D11';
+}
+
+function renderNotify(){
+  const withinDays = parseInt(document.getElementById('notify-days').value) || 60;
+  const all = buildAlerts();
+  const filtered = all.filter(a => a.days <= withinDays);
+  const el = document.getElementById('notify-content');
+
+  if(filtered.length === 0){
+    el.innerHTML = `<div class="card"><div class="empty-state" style="padding:3rem">✅ ไม่มีรายการที่ต้องต่ออายุภายใน ${withinDays} วัน</div></div>`;
+    return;
+  }
+
+  const expired = filtered.filter(a=>a.days<0);
+  const urgent  = filtered.filter(a=>a.days>=0&&a.days<=14);
+  const soon    = filtered.filter(a=>a.days>14&&a.days<=30);
+  const coming  = filtered.filter(a=>a.days>30);
+
+  function section(title, items, cls){
+    if(!items.length) return '';
+    return `<p class="divider">${title}</p>`+items.map(a=>`
+      <div class="notify-card ${cls}">
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:14px">${a.icon} ${a.type} — ${a.car}</div>
+          <div style="font-size:12px;margin-top:3px;color:#555">หมดอายุ: ${fmtDate(a.expiry)}</div>
+          ${a.extra?`<div style="font-size:12px;color:#666;margin-top:2px">${a.extra}</div>`:''}
+        </div>
+        <div class="notify-days-badge" style="color:${notifyDaysColor(a.days)}">
+          ${a.days<0?Math.abs(a.days):a.days}
+          <small>${a.days<0?'วันที่แล้ว':'วันที่เหลือ'}</small>
+        </div>
+      </div>`).join('');
+  }
+
+  el.innerHTML =
+    section('🔴 หมดอายุแล้ว', expired, 'notify-expired') +
+    section('🟠 เร่งด่วน — เหลือน้อยกว่า 14 วัน', urgent, 'notify-urgent') +
+    section('🟡 ใกล้หมด — เหลือ 15-30 วัน', soon, 'notify-soon') +
+    section('🟢 กำลังจะถึง — เกิน 30 วัน', coming, 'notify-ok');
+}
+
+function populateOwnerFilter(){
+  const el = document.getElementById('owner-filter');
+  if(!el) return;
+  const cur = el.value;
+  const owners = [...new Set(data.cars.map(c=>c.owner).filter(Boolean))];
+  const hasPersonal = data.cars.some(c=>c.ownerType==='personal');
+  const hasCompany  = data.cars.some(c=>c.ownerType==='company');
+  let opts = '<option value="all">รถทั้งหมด</option>';
+  if(hasCompany)  opts += '<option value="company">รถบริษัท (ทุกบริษัท)</option>';
+  owners.filter(o=>o).forEach(o=>{ opts += `<option value="${o}">${o}</option>`; });
+  if(hasPersonal) opts += '<option value="personal">รถส่วนตัว</option>';
+  el.innerHTML = opts;
+  if(cur) el.value = cur;
+}
+
+function getOwnerBadge(car){
+  if(!car.ownerType && !car.owner) return '';
+  if(car.ownerType==='personal') return '<span class="badge bp">ส่วนตัว</span>';
+  if(car.owner) return `<span class="badge bi">${car.owner}</span>`;
+  return '<span class="badge bg">บริษัท</span>';
+}
+
+function renderOverview(){
+  const areaEl=document.getElementById('alert-area');
+  const contentEl=document.getElementById('overview-content');
+  const filterVal = (document.getElementById('owner-filter')||{}).value || 'all';
+
+  if(data.cars.length===0){
+    areaEl.innerHTML=''; contentEl.innerHTML='<div class="empty-state">ยังไม่มีรถในระบบ<br>กด "+ เพิ่มรถ" เพื่อเริ่มต้น</div>';
+    document.getElementById('alert-badge').style.display='none'; return;
+  }
+
+  const allAlerts = buildAlerts();
+  const criticalAlerts = allAlerts.filter(a=>a.days<=60);
+  const alertCount = criticalAlerts.length;
+  const badge=document.getElementById('alert-badge');
+  if(alertCount>0){ badge.style.display='inline'; badge.textContent=alertCount; } else badge.style.display='none';
+
+  const alertHtml = criticalAlerts.slice(0,5).map(a=>{
+    const d=a.days;
+    return `<div class="alert-box ${d<0?'alert-danger':'alert-warning'}" style="display:flex;justify-content:space-between;align-items:center">
+      <span>${a.icon} <strong>${a.car}</strong> — ${a.type} ${d<0?'หมดอายุแล้ว '+Math.abs(d)+' วัน':'หมดอายุใน '+d+' วัน'} (${fmtDate(a.expiry)})</span>
+    </div>`;
+  }).join('');
+  const moreCount = criticalAlerts.length > 5 ? criticalAlerts.length - 5 : 0;
+  areaEl.innerHTML = alertHtml + (moreCount>0?`<div style="text-align:center;font-size:13px;color:#185FA5;margin-bottom:8px;cursor:pointer" onclick="document.querySelectorAll('.tab')[1].click()">ดูทั้งหมด ${moreCount} รายการเพิ่มเติม →</div>`:'');
+
+  // filter cars
+  let filteredCars = data.cars.filter(car=>{
+    if(filterVal==='all') return true;
+    if(filterVal==='company') return car.ownerType==='company'||!car.ownerType;
+    if(filterVal==='personal') return car.ownerType==='personal';
+    return car.owner===filterVal;
+  });
+
+  const totals={tax:0,ins:0,oil:0,fuel:0,repair:0};
+  data.tax.filter(r=>filteredCars.find(c=>c.id===r.carId)).forEach(r=>totals.tax+=Number(r.amount||0));
+  data.insurance.filter(r=>filteredCars.find(c=>c.id===r.carId)).forEach(r=>totals.ins+=Number(r.amount||0));
+  data.oil.filter(r=>filteredCars.find(c=>c.id===r.carId)).forEach(r=>totals.oil+=Number(r.amount||0));
+  data.fuel.filter(r=>filteredCars.find(c=>c.id===r.carId)).forEach(r=>totals.fuel+=Number(r.total||0));
+  data.repair_car.filter(r=>filteredCars.find(c=>c.id===r.carId)).forEach(r=>totals.repair+=Number(r.amount||0));
+  const grand=totals.tax+totals.ins+totals.oil+totals.fuel+totals.repair;
+
+  const carCards=filteredCars.map(car=>{
+    const lTax=[...data.tax].filter(t=>t.carId===car.id).sort((a,b)=>new Date(b.expiry)-new Date(a.expiry))[0];
+    const lIns=[...data.insurance].filter(t=>t.carId===car.id).sort((a,b)=>new Date(b.expiry)-new Date(a.expiry))[0];
+    const lOil=[...data.oil].filter(o=>o.carId===car.id).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+    const carTotal=[...data.tax,...data.insurance,...data.oil,...data.fuel,...data.repair_car].filter(r=>r.carId===car.id).reduce((s,r)=>s+Number(r.amount||r.total||0),0);
+    let taxBadge='<span class="badge bg">ยังไม่มีข้อมูลภาษี</span>';
+    if(lTax){ const d=daysDiff(lTax.expiry); taxBadge=d<0?'<span class="badge bd">ภาษีหมดแล้ว</span>':d<=60?`<span class="badge bw">ภาษีหมด ${d} วัน</span>`:'<span class="badge bs">ภาษี OK</span>'; }
+    let insBadge='';
+    if(lIns){ const d=daysDiff(lIns.expiry); insBadge=d<0?'<span class="badge bd">ประกันหมดแล้ว</span>':d<=60?`<span class="badge bw">ประกันหมด ${d} วัน</span>`:'<span class="badge bs">ประกัน OK</span>'; }
+    return `<div class="card" style="cursor:pointer" onclick="showCarDetail('${car.id}')">
+      <div class="flex-between" style="margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:20px">${getVehicleIcon(car)}</span>
+          <span style="font-weight:500;font-size:15px">${car.name}</span>
+          ${getOwnerBadge(car)}
+          ${getVehicleStatusBadge(car)}
+        </div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">${taxBadge}${insBadge}
+          <button onclick="event.stopPropagation();deleteCar('${car.id}')" style="background:none;border:0.5px solid #f7c1c1;color:#A32D2D;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer">ลบ</button>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#999">${[car.make,car.model,car.year?'ปี '+car.year:'',car.color,car.plate].filter(Boolean).join(' · ')}</div>
+      <div style="margin-top:8px;font-size:12px;color:#888">${lTax?'ภาษีหมด: '+fmtDate(lTax.expiry)+'  ':''}${lIns?'ประกัน'+lIns.type+'หมด: '+fmtDate(lIns.expiry)+'  ':''}${lOil&&lOil.nextKm?'น้ำมันครั้งหน้า: '+fmt(lOil.nextKm)+' กม.':''}</div>
+      <div style="margin-top:6px;font-size:13px;font-weight:500">รวมค่าใช้จ่าย: ${fmt(carTotal)} ฿ <span style="font-size:11px;color:#aaa;font-weight:400">· คลิกดูรายละเอียด</span></div>
+    </div>`;
+  }).join('');
+
+  contentEl.innerHTML=`
+    <div class="stat-grid-4">
+      <div class="stat"><div class="stat-label">รถที่แสดง</div><div class="stat-value">${filteredCars.length} คัน</div><div class="stat-sub">จาก ${data.cars.length} คัน</div></div>
+      <div class="stat"><div class="stat-label">ค่าใช้จ่ายรวม</div><div class="stat-value">${fmt(grand)}</div><div class="stat-sub">บาท</div></div>
+      <div class="stat"><div class="stat-label">รายการทั้งหมด</div><div class="stat-value">${data.tax.length+data.insurance.length+data.oil.length+data.fuel.length+data.repair_car.length+data.trip.length}</div></div>
+      <div class="stat"><div class="stat-label">แจ้งเตือน</div><div class="stat-value" style="color:${alertCount>0?'#A32D2D':'#3B6D11'}">${alertCount}</div><div class="stat-sub">รายการ</div></div>
+    </div>
+    <p class="divider">รายการรถ${filteredCars.length<data.cars.length?' (กรองแล้ว)':''}</p>${carCards||'<div class="empty-state">ไม่มีรถในกลุ่มนี้</div>'}`;
+}
+
+function openModal(id){ document.getElementById(id).style.display='flex'; }
+function closeModal(id){ document.getElementById(id).style.display='none'; }
+
+function populateSelects(){
+  const opts = data.cars.length===0 ? '<option value="">-- ยังไม่มีรถ --</option>'
+    : data.cars.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  ['tax-car','ins-car','oil-car','fuel-car','repair-car','trip-car'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML=opts;
+  });
+}
+
+function clearFields(ids){ ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; }); }
+
+// ── PRINT ──
+function printCarDetail(carId){
+  const car = data.cars.find(c=>c.id===carId); if(!car) return;
+  const taxR  = [...data.tax].filter(r=>r.carId===carId).sort((a,b)=>new Date(b.date||b.expiry)-new Date(a.date||a.expiry));
+  const insR  = [...data.insurance].filter(r=>r.carId===carId).sort((a,b)=>new Date(b.expiry)-new Date(a.expiry));
+  const oilR  = [...data.oil].filter(r=>r.carId===carId).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const repR  = [...data.repair_car].filter(r=>r.carId===carId).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const sumAmt = a => a.reduce((s,r)=>s+Number(r.amount||0),0);
+  const sumTot = a => a.reduce((s,r)=>s+Number(r.total||0),0);
+  const fuelR = [...data.fuel].filter(r=>r.carId===carId);
+
+  const html = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+  <title>ข้อมูลรถ ${car.name}</title>
+  <style>
+    body{font-family:'Sarabun','Segoe UI',sans-serif;padding:24px;color:#1a1a18;font-size:14px;max-width:800px;margin:auto}
+    h1{font-size:20px;margin-bottom:4px} .sub{color:#888;font-size:12px;margin-bottom:16px}
+    h2{font-size:14px;font-weight:600;border-bottom:1px solid #eee;padding-bottom:4px;margin:16px 0 8px;text-transform:uppercase;letter-spacing:0.3px;color:#555}
+    table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px}
+    th{text-align:left;padding:6px 8px;background:#f4f4f1;font-size:11px;color:#666}
+    td{padding:6px 8px;border-bottom:1px solid #f0f0ee}
+    .num{text-align:right} .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+    .info-item{padding:8px;background:#f9f9f7;border-radius:6px} .info-label{font-size:10px;color:#999;margin-bottom:2px}
+    .docs{margin-top:8px} .doc-link{color:#185FA5;font-size:12px}
+    @media print{@page{margin:15mm} button{display:none}}
+  </style></head><body>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+    <span style="font-size:28px">${getVehicleIcon(car)}</span>
+    <h1>${car.name}</h1>
+  </div>
+  <div class="sub">${[car.make,car.model,car.year?'ปี '+car.year:'',car.color,car.plate,car.vin?'VIN: '+car.vin:''].filter(Boolean).join(' · ')}</div>
+  <div class="sub">เจ้าของ: ${car.owner||'-'} &nbsp;|&nbsp; พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})}</div>
+
+  <div class="info-grid">
+    ${taxR[0]?`<div class="info-item"><div class="info-label">ภาษีรถหมดอายุ</div><strong>${fmtDate(taxR[0].expiry)}</strong></div>`:''}
+    ${insR[0]?`<div class="info-item"><div class="info-label">ประกัน${insR[0].type}หมดอายุ</div><strong>${fmtDate(insR[0].expiry)}</strong></div>`:''}
+    ${oilR[0]&&oilR[0].nextKm?`<div class="info-item"><div class="info-label">เปลี่ยนน้ำมันครั้งหน้า</div><strong>${fmt(oilR[0].nextKm)} กม.</strong></div>`:''}
+  </div>
+
+  ${taxR.length>0?`<h2>ภาษีรถ (รวม ${fmt(sumAmt(taxR))} ฿)</h2>
+  <table><tr><th>วันที่ชำระ</th><th>หมดอายุ</th><th class="num">ยอดเงิน (฿)</th><th>หมายเหตุ</th><th>เอกสาร</th></tr>
+  ${taxR.map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${fmtDate(r.expiry)}</td><td class="num">${fmt(r.amount)}</td><td>${r.note||''}</td><td>${r.driveLink?`<a href="${r.driveLink}" class="doc-link">ดูบิล</a>`:''}</td></tr>`).join('')}</table>`:''}
+
+  ${insR.length>0?`<h2>ประกันภัย (รวม ${fmt(sumAmt(insR))} ฿)</h2>
+  <table><tr><th>ชั้น</th><th>บริษัท</th><th>คุ้มครอง</th><th class="num">เบี้ย (฿)</th><th>เบอร์ฉุกเฉิน</th><th>เอกสาร</th></tr>
+  ${insR.map(r=>`<tr><td>${r.type}</td><td>${r.company||''} ${r.policy?'#'+r.policy:''}</td><td>${fmtDate(r.start)}–${fmtDate(r.expiry)}</td><td class="num">${fmt(r.amount)}</td><td>${r.hotline||''}</td><td>${r.driveLink?`<a href="${r.driveLink}" class="doc-link">ดูกรมธรรม์</a>`:''}</td></tr>`).join('')}</table>`:''}
+
+  ${oilR.length>0?`<h2>น้ำมันเครื่อง (รวม ${fmt(sumAmt(oilR))} ฿)</h2>
+  <table><tr><th>วันที่</th><th>ยี่ห้อ/เกรด</th><th>ไมล์</th><th>ครั้งหน้า</th><th class="num">ยอด (฿)</th><th>เอกสาร</th></tr>
+  ${oilR.map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${[r.brand,r.grade].filter(Boolean).join(' ')}</td><td>${r.km?fmt(r.km)+' กม.':''}</td><td>${r.nextKm?fmt(r.nextKm)+' กม.':''}</td><td class="num">${fmt(r.amount)}</td><td>${r.driveLink?`<a href="${r.driveLink}" class="doc-link">ดูบิล</a>`:''}</td></tr>`).join('')}</table>`:''}
+
+  ${repR.length>0?`<h2>ซ่อมบำรุง (รวม ${fmt(sumAmt(repR))} ฿)</h2>
+  <table><tr><th>วันที่</th><th>ประเภท</th><th>ร้าน</th><th>รายละเอียด</th><th class="num">ยอด (฿)</th><th>เอกสาร</th></tr>
+  ${repR.map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${r.type}</td><td>${r.shop||''}</td><td>${r.detail||''}</td><td class="num">${fmt(r.amount)}</td><td>${r.driveLink?`<a href="${r.driveLink}" class="doc-link">ดูบิล</a>`:''}</td></tr>`).join('')}</table>`:''}
+
+  ${(car.docReg||car.docIns||car.docOther)?`<h2>เอกสารประจำรถ</h2><div class="docs">
+    ${car.docReg?`<div>📋 สมุดทะเบียนรถ: <a href="${car.docReg}" class="doc-link">${car.docReg}</a></div>`:''}
+    ${car.docIns?`<div>🛡 กรมธรรม์/พ.ร.บ.: <a href="${car.docIns}" class="doc-link">${car.docIns}</a></div>`:''}
+    ${car.docOther?car.docOther.split(',').map((l,i)=>`<div>📎 เอกสาร ${i+1}: <a href="${l.trim()}" class="doc-link">${l.trim()}</a></div>`).join(''):''}
+  </div>`:''}
+
+  <div style="margin-top:20px;text-align:center">
+    <button onclick="window.print()" style="padding:8px 20px;font-size:14px;cursor:pointer;border:1px solid #ccc;border-radius:6px;background:#1a1a18;color:#fff">🖨 พิมพ์</button>
+  </div>
+  <script>window.onload=()=>window.print();<\/script>
+  </body></html>`;
+
+  const w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
+// ── VEHICLE HELPERS ──
+function driveBtn(link, label){
+  if(!link||link.trim()==='') return '';
+  const url = link.trim().startsWith('http') ? link.trim() : 'https://'+link.trim();
+  return `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#185FA5;text-decoration:none;background:#E6F1FB;border-radius:5px;padding:2px 7px;white-space:nowrap">📎 ${label||'ดูเอกสาร'}</a>`;
+}
+const VEHICLE_ICON = { car:'🚗', pickup:'🛻', van:'🚐', truck:'🚚', motorcycle:'🏍', other:'🚙' };
+const VEHICLE_STATUS_LABEL = { active:'ใช้งานอยู่', broken:'ชำรุด/ซ่อม', sold:'ขายแล้ว', retired:'ปลดระวาง' };
+const VEHICLE_STATUS_BADGE = { active:'bs', broken:'bw', sold:'bg', retired:'bd' };
+function getVehicleIcon(car){ return VEHICLE_ICON[car.vehicleType||'car']||'🚗'; }
+function getVehicleStatusBadge(car){
+  const st = car.vehicleStatus||'active';
+  if(st==='active') return '';
+  return `<span class="badge ${VEHICLE_STATUS_BADGE[st]}">${VEHICLE_STATUS_LABEL[st]}</span>`;
+}
+
+// ── CAR DETAIL MODAL ──
+function showCarDetail(carId){
+  const car = data.cars.find(c=>c.id===carId); if(!car) return;
+  const taxR  = [...data.tax].filter(r=>r.carId===carId).sort((a,b)=>new Date(b.date||b.expiry)-new Date(a.date||a.expiry));
+  const insR  = [...data.insurance].filter(r=>r.carId===carId).sort((a,b)=>new Date(b.expiry)-new Date(a.expiry));
+  const oilR  = [...data.oil].filter(r=>r.carId===carId).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const fuelR = [...data.fuel].filter(r=>r.carId===carId).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const repR  = [...data.repair_car].filter(r=>r.carId===carId).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const tripR = [...data.trip].filter(r=>r.carId===carId).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const sumAmt = a => a.reduce((s,r)=>s+Number(r.amount||0),0);
+  const sumTot = a => a.reduce((s,r)=>s+Number(r.total||0),0);
+  const tTotal=sumAmt(taxR), iTotal=sumAmt(insR), oTotal=sumAmt(oilR), fTotal=sumTot(fuelR), rTotal=sumAmt(repR);
+  const grand = tTotal+iTotal+oTotal+fTotal+rTotal;
+  const lTax = taxR[0], lIns = insR[0], lOil = oilR[0];
+
+  function detailActionBtns(table, dataKey, r){
+    return `<div style="display:flex;gap:4px;flex-shrink:0">
+      <button onclick="event.stopPropagation();closeModal('modal-car-detail');openEditModal('${table}','${dataKey}','${r.id}')" style="background:none;border:0.5px solid #ccc;border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer">แก้ไข</button>
+      <button onclick="event.stopPropagation();if(confirm('ลบรายการนี้?')){deleteRecord('${table}','${r.id}','${dataKey}');closeModal('modal-car-detail')}" style="background:none;border:0.5px solid #f7c1c1;color:#A32D2D;border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer">ลบ</button>
+    </div>`;
+  }
+
+  document.getElementById('car-detail-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="font-size:30px">${getVehicleIcon(car)}</span>
+      <div style="flex:1">
+        <div style="font-size:17px;font-weight:600">${car.name}</div>
+        <div style="font-size:12px;color:#888">${[car.make,car.model,car.year?'ปี '+car.year:'',car.color,car.plate].filter(Boolean).join(' · ')}</div>
+        <div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap">${getOwnerBadge(car)}${getVehicleStatusBadge(car)}</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+      <div class="stat"><div class="stat-label">ค่าใช้จ่ายรวม</div><div class="stat-value" style="font-size:15px">${fmt(grand)}</div><div class="stat-sub">บาท</div></div>
+      <div class="stat"><div class="stat-label">ค่าน้ำมันเติม</div><div class="stat-value" style="font-size:15px">${fmt(fTotal)}</div><div class="stat-sub">บาท</div></div>
+      <div class="stat"><div class="stat-label">ค่าซ่อมรวม</div><div class="stat-value" style="font-size:15px">${fmt(rTotal)}</div><div class="stat-sub">บาท</div></div>
+    </div>
+
+    <div style="font-size:13px;display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
+      ${lTax?`<div style="padding:8px;background:#f9f9f7;border-radius:7px"><div style="font-size:10px;color:#888;margin-bottom:2px">ภาษีรถหมดอายุ</div><div style="font-weight:500">${fmtDate(lTax.expiry)}</div></div>`:''}
+      ${lIns?`<div style="padding:8px;background:#f9f9f7;border-radius:7px"><div style="font-size:10px;color:#888;margin-bottom:2px">ประกัน${lIns.type}หมดอายุ</div><div style="font-weight:500">${fmtDate(lIns.expiry)}</div></div>`:''}
+      ${lOil&&lOil.nextKm?`<div style="padding:8px;background:#f9f9f7;border-radius:7px"><div style="font-size:10px;color:#888;margin-bottom:2px">เปลี่ยนน้ำมันครั้งหน้า</div><div style="font-weight:500">${fmt(lOil.nextKm)} กม.</div></div>`:''}
+      ${lOil?`<div style="padding:8px;background:#f9f9f7;border-radius:7px"><div style="font-size:10px;color:#888;margin-bottom:2px">น้ำมันเปลี่ยนล่าสุด</div><div style="font-weight:500">${fmtDate(lOil.date)}</div></div>`:''}
+    </div>
+
+    ${taxR.length>0?`<div class="divider">ภาษีรถ (${taxR.length} รายการ · รวม ${fmt(tTotal)} ฿)</div>
+    <div style="font-size:13px">${taxR.map(r=>`<div class="record-item"><div class="flex-between"><span>ชำระ ${fmtDate(r.date)} · หมด ${fmtDate(r.expiry)}</span><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:500">${fmt(r.amount)} ฿</span>${detailActionBtns('tax','tax',r)}</div></div>${r.note?`<div class="record-meta">${r.note}</div>`:''}</div>`).join('')}</div>`:''}
+
+    ${insR.length>0?`<div class="divider">ประกันภัย (${insR.length} รายการ · รวม ${fmt(iTotal)} ฿)</div>
+    <div style="font-size:13px">${insR.map(r=>`<div class="record-item"><div class="flex-between"><div><span class="badge bi">${r.type}</span> ${r.company||''} ${r.policy?'· '+r.policy:''}</div><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:500">${fmt(r.amount)} ฿</span>${detailActionBtns('insurance','insurance',r)}</div></div><div class="record-meta">คุ้มครอง ${fmtDate(r.start)} – ${fmtDate(r.expiry)}${r.coverage?' · ทุน '+fmt(r.coverage)+' ฿':''}</div>${r.agentName||r.agentPhone?`<div class="record-meta">👤 ${r.agentName||''}${r.agentPhone?' · <a href="tel:'+r.agentPhone+'">'+r.agentPhone+'</a>':''}</div>`:''} ${r.hotline?`<div class="record-meta">🚨 <a href="tel:${r.hotline}" style="color:#A32D2D">${r.hotline}</a>${r.tow?' · 🚗 '+r.tow:''}</div>`:''}</div>`).join('')}</div>`:''}
+
+    ${oilR.length>0?`<div class="divider">น้ำมันเครื่อง (${oilR.length} รายการ · รวม ${fmt(oTotal)} ฿)</div>
+    <div style="font-size:13px">${oilR.map(r=>`<div class="record-item"><div class="flex-between"><div>${fmtDate(r.date)}${r.brand?' · '+r.brand+(r.grade?' '+r.grade:''):''}</div><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:500">${fmt(r.amount)} ฿</span>${detailActionBtns('oil','oil',r)}</div></div><div class="record-meta">${[r.km?fmt(r.km)+' กม.':'',r.nextKm?'ครั้งหน้า '+fmt(r.nextKm)+' กม.':'',r.shop||'',r.filter==='1'?'เปลี่ยนไส้กรอง':''].filter(Boolean).join(' · ')}</div></div>`).join('')}</div>`:''}
+
+    ${fuelR.length>0?`<div class="divider">เติมน้ำมัน (${fuelR.length} รายการ · รวม ${fmt(fTotal)} ฿)</div>
+    <div style="font-size:13px">${fuelR.map(r=>`<div class="record-item"><div class="flex-between"><div>${fmtDate(r.date)} · <span class="badge bg">${r.type}</span> ${Number(r.liter||0).toFixed(1)} ล.</div><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:500">${fmt(r.total)} ฿</span>${detailActionBtns('fuel','fuel',r)}</div></div><div class="record-meta">${r.price?fmt(r.price)+' ฿/ล.':''}${r.km?' · '+fmt(r.km)+' กม.':''}${r.station?' · '+r.station:''}</div></div>`).join('')}</div>`:''}
+
+    ${repR.length>0?`<div class="divider">ซ่อมบำรุง (${repR.length} รายการ · รวม ${fmt(rTotal)} ฿)</div>
+    <div style="font-size:13px">${repR.map(r=>`<div class="record-item"><div class="flex-between"><div><span class="badge bi">${r.type}</span>${r.shop?' '+r.shop:''}</div><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:500">${fmt(r.amount)} ฿</span>${detailActionBtns('repair_car','repair_car',r)}</div></div><div class="record-meta">${fmtDate(r.date)}${r.km?' · '+fmt(r.km)+' กม.':''}</div>${r.detail?`<div class="record-meta">${r.detail}</div>`:''}</div>`).join('')}</div>`:''}
+
+    ${tripR.length>0?`<div class="divider">เที่ยวการเดินทาง (${tripR.length} เที่ยว)</div>
+    <div style="font-size:13px">${tripR.map(r=>`<div class="record-item"><div class="flex-between"><div>${fmtDate(r.date)} · ${r.driver||''}${r.purpose?' · '+r.purpose:''}</div><div style="display:flex;align-items:center;gap:6px"><span>${r.dist?fmt(r.dist)+' กม.':''}</span>${detailActionBtns('trip','trip',r)}</div></div>${r.from?`<div class="record-meta">${r.from} → ${r.to}</div>`:''}</div>`).join('')}</div>`:''}
+
+    <div style="margin-top:16px;padding-top:14px;border-top:0.5px solid #eee;display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="printCarDetail('${car.id}')" style="background:#1a1a18;color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer">🖨 ปริ้นข้อมูลรถ</button>
+      <button onclick="closeModal('modal-car-detail');editCar('${car.id}')" style="background:none;border:0.5px solid #bbb;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer">✏️ แก้ไขข้อมูลรถ</button>
+      <button onclick="deleteCar('${car.id}');closeModal('modal-car-detail')" style="background:none;border:0.5px solid #f7c1c1;color:#A32D2D;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer">ลบรถ</button>
+    </div>
+    ${(car.docReg||car.docIns||car.docOther)?`
+    <div style="margin-top:12px;padding:12px;background:#f4f4f1;border-radius:8px">
+      <div style="font-size:12px;font-weight:600;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.3px">📎 เอกสารประจำรถ</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${car.docReg?driveBtn(car.docReg,'สมุดทะเบียน'):''}
+        ${car.docIns?driveBtn(car.docIns,'กรมธรรม์/พ.ร.บ.'):''}
+        ${car.docOther?car.docOther.split(',').map((l,i)=>driveBtn(l.trim(),'เอกสาร '+(i+1))).join(''):''}
+      </div>
+    </div>`:''}`;
+  openModal('modal-car-detail');
+}
+
+function toggleOwnerFields(){
+  const type = document.getElementById('new-car-owner-type').value;
+  document.getElementById('owner-company-wrap').style.display = type==='company' ? '' : 'none';
+  document.getElementById('owner-personal-wrap').style.display = type==='personal' ? '' : 'none';
+  document.getElementById('owner-custom-wrap').style.display = 'none';
+}
+
+// ── EDIT CAR ──
+function editCar(carId){
+  const car = data.cars.find(c=>c.id===carId); if(!car) return;
+  document.getElementById('edit-car-id').value = carId;
+  document.getElementById('ec-name').value = car.name||'';
+  document.getElementById('ec-make').value = car.make||'';
+  document.getElementById('ec-model').value = car.model||'';
+  document.getElementById('ec-year').value = car.year||'';
+  document.getElementById('ec-color').value = car.color||'';
+  document.getElementById('ec-plate').value = car.plate||'';
+  document.getElementById('ec-vin').value = car.vin||'';
+  document.getElementById('ec-vehicle-type').value = car.vehicleType||'car';
+  document.getElementById('ec-vehicle-status').value = car.vehicleStatus||'active';
+  document.getElementById('ec-owner-type').value = car.ownerType||'company';
+  document.getElementById('ec-owner').value = car.owner||'';
+  document.getElementById('ec-doc-reg').value = car.docReg||'';
+  document.getElementById('ec-doc-ins').value = car.docIns||'';
+  document.getElementById('ec-doc-other').value = car.docOther||'';
+  openModal('modal-edit-car');
+}
+
+async function saveEditCar(){
+  const carId = document.getElementById('edit-car-id').value;
+  const car = data.cars.find(c=>c.id===carId); if(!car) return;
+  const name = document.getElementById('ec-name').value.trim();
+  if(!name){ alert('กรุณาใส่ชื่อรถ'); return; }
+  const updated = { ...car,
+    name, make:document.getElementById('ec-make').value,
+    model:document.getElementById('ec-model').value,
+    year:document.getElementById('ec-year').value,
+    color:document.getElementById('ec-color').value,
+    plate:document.getElementById('ec-plate').value,
+    vin:document.getElementById('ec-vin').value,
+    vehicleType:document.getElementById('ec-vehicle-type').value,
+    vehicleStatus:document.getElementById('ec-vehicle-status').value,
+    ownerType:document.getElementById('ec-owner-type').value,
+    owner:document.getElementById('ec-owner').value,
+    docReg:document.getElementById('ec-doc-reg').value,
+    docIns:document.getElementById('ec-doc-ins').value,
+    docOther:document.getElementById('ec-doc-other').value };
+  setSyncStatus('loading','กำลังบันทึก...');
+  try{
+    const r = await apiCall('upsert','cars',{row:updated});
+    if(r.error) throw new Error(r.error);
+    const idx = data.cars.findIndex(c=>c.id===carId);
+    if(idx>=0) data.cars[idx] = updated;
+    setSyncStatus('ok','✓ แก้ไขแล้ว');
+    closeModal('modal-edit-car');
+    populateSelects(); populateOwnerFilter(); renderOverview();
+  }catch(e){ setSyncStatus('err','บันทึกไม่สำเร็จ'); }
+}
+
+function handleCompanySelect(){
+  const sel = document.getElementById('new-car-company');
+  document.getElementById('owner-custom-wrap').style.display = sel.value==='custom' ? '' : 'none';
+}
+
+// ── ADD CAR ──
+async function addCar(){
+  const name=document.getElementById('new-car-name').value.trim();
+  if(!name){ alert('กรุณาใส่ชื่อหรือทะเบียนรถ'); return; }
+  const ownerType = document.getElementById('new-car-owner-type').value;
+  let ownerLabel = '';
+  if(ownerType==='company'){
+    const sel = document.getElementById('new-car-company').value;
+    ownerLabel = sel==='custom' ? document.getElementById('new-car-company-custom').value.trim() : sel;
+  } else {
+    ownerLabel = document.getElementById('new-car-owner-name').value.trim() || 'ส่วนตัว';
+  }
+  const car={ id:Date.now().toString(), name,
+    make:document.getElementById('new-car-make').value,
+    model:document.getElementById('new-car-model').value,
+    year:document.getElementById('new-car-year').value,
+    color:document.getElementById('new-car-color').value,
+    plate:document.getElementById('new-car-plate').value,
+    vin:document.getElementById('new-car-vin').value,
+    vehicleType:document.getElementById('new-car-vehicle-type').value,
+    vehicleStatus:document.getElementById('new-car-vehicle-status').value,
+    ownerType, owner: ownerLabel,
+    docReg:document.getElementById('new-car-doc-reg').value,
+    docIns:document.getElementById('new-car-doc-ins').value,
+    docOther:document.getElementById('new-car-doc-other').value,
+    createdAt:today };
+  const ok = await pushRow('cars', car);
+  if(!ok) return;
+  data.cars.push(car);
+  closeModal('modal-car');
+  ['new-car-name','new-car-make','new-car-model','new-car-year','new-car-color','new-car-plate','new-car-vin','new-car-company-custom','new-car-owner-name','new-car-doc-reg','new-car-doc-ins','new-car-doc-other'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('new-car-owner-type').value='company';
+  document.getElementById('new-car-company').value='';
+  toggleOwnerFields();
+  populateSelects(); populateOwnerFilter(); renderOverview();
+}
+
+async function deleteCar(id){
+  if(!confirm('ลบรถคันนี้ออกจากระบบ? ข้อมูลที่เกี่ยวข้องทั้งหมดจะยังอยู่ใน Sheet')) return;
+  setSyncStatus('loading','กำลังลบ...');
+  try{
+    const r = await apiCall('delete','cars',{id});
+    if(r.error) throw new Error(r.error);
+    data.cars = data.cars.filter(c=>c.id!==id);
+    setSyncStatus('ok','✓ ลบแล้ว');
+    populateSelects(); populateOwnerFilter(); renderOverview();
+  }catch(e){ setSyncStatus('err','ลบไม่สำเร็จ'); }
+}
+
+// ── SAVE FUNCTIONS ──
+async function saveTax(){
+  const carId=document.getElementById('tax-car').value;
+  if(!carId){alert('กรุณาเลือกรถ');return;}
+  if(!document.getElementById('tax-expiry').value){alert('กรุณาระบุวันหมดอายุภาษี');return;}
+  const row={id:Date.now().toString(),carId,
+    date:document.getElementById('tax-date').value,
+    expiry:document.getElementById('tax-expiry').value,
+    amount:document.getElementById('tax-amount').value,
+    driveLink:document.getElementById('tax-drive').value,
+    note:document.getElementById('tax-note').value};
+  const ok=await pushRow('tax',row); if(!ok) return;
+  data.tax.push(row);
+  clearFields(['tax-expiry','tax-amount','tax-drive','tax-note']);
+  document.getElementById('tax-date').value=today;
+  renderList('tax'); renderOverview();
+}
+
+async function saveInsurance(){
+  const carId=document.getElementById('ins-car').value;
+  if(!carId){alert('กรุณาเลือกรถ');return;}
+  if(!document.getElementById('ins-expiry').value){alert('กรุณาระบุวันหมดอายุประกัน');return;}
+  const row={id:Date.now().toString(),carId,
+    type:document.getElementById('ins-type').value,
+    company:document.getElementById('ins-company').value,
+    policy:document.getElementById('ins-policy').value,
+    start:document.getElementById('ins-start').value,
+    expiry:document.getElementById('ins-expiry').value,
+    amount:document.getElementById('ins-amount').value,
+    coverage:document.getElementById('ins-coverage').value,
+    agentName:document.getElementById('ins-agent-name').value,
+    agentPhone:document.getElementById('ins-agent-phone').value,
+    agentLine:document.getElementById('ins-agent-line').value,
+    agentBroker:document.getElementById('ins-agent-broker').value,
+    hotline:document.getElementById('ins-hotline').value,
+    tow:document.getElementById('ins-tow').value,
+    backupPhone:document.getElementById('ins-backup-phone').value,
+    accidentSteps:document.getElementById('ins-accident-steps').value,
+    driveLink:document.getElementById('ins-drive').value,
+    note:document.getElementById('ins-note').value};
+  const ok=await pushRow('insurance',row); if(!ok) return;
+  data.insurance.push(row);
+  clearFields(['ins-company','ins-policy','ins-expiry','ins-amount','ins-coverage',
+    'ins-agent-name','ins-agent-phone','ins-agent-line','ins-agent-broker',
+    'ins-hotline','ins-tow','ins-backup-phone','ins-accident-steps','ins-drive','ins-note']);
+  document.getElementById('ins-start').value=today;
+  renderList('insurance'); renderOverview();
+}
+
+async function saveOil(){
+  const carId=document.getElementById('oil-car').value;
+  if(!carId){alert('กรุณาเลือกรถ');return;}
+  const row={id:Date.now().toString(),carId,
+    date:document.getElementById('oil-date').value,
+    km:document.getElementById('oil-km').value,
+    nextKm:document.getElementById('oil-next-km').value,
+    amount:document.getElementById('oil-amount').value,
+    brand:document.getElementById('oil-brand').value,
+    grade:document.getElementById('oil-grade').value,
+    shop:document.getElementById('oil-shop').value,
+    filter:document.getElementById('oil-filter').value,
+    driveLink:document.getElementById('oil-drive').value,
+    note:document.getElementById('oil-note').value};
+  const ok=await pushRow('oil',row); if(!ok) return;
+  data.oil.push(row);
+  clearFields(['oil-km','oil-next-km','oil-amount','oil-brand','oil-grade','oil-shop','oil-drive','oil-note']);
+  document.getElementById('oil-date').value=today;
+  renderList('oil'); renderOverview();
+}
+
+function calcFuel(){
+  const p=parseFloat(document.getElementById('fuel-price').value)||0;
+  const l=parseFloat(document.getElementById('fuel-liter').value)||0;
+  if(p&&l) document.getElementById('fuel-total').value=(p*l).toFixed(2);
+}
+
+async function saveFuel(){
+  const carId=document.getElementById('fuel-car').value;
+  if(!carId){alert('กรุณาเลือกรถ');return;}
+  const row={id:Date.now().toString(),carId,
+    date:document.getElementById('fuel-date').value,
+    type:document.getElementById('fuel-type').value,
+    liter:document.getElementById('fuel-liter').value,
+    price:document.getElementById('fuel-price').value,
+    total:document.getElementById('fuel-total').value,
+    km:document.getElementById('fuel-km').value,
+    station:document.getElementById('fuel-station').value,
+    driveLink:document.getElementById('fuel-drive').value};
+  const ok=await pushRow('fuel',row); if(!ok) return;
+  data.fuel.push(row);
+  clearFields(['fuel-liter','fuel-price','fuel-total','fuel-km','fuel-station','fuel-drive']);
+  document.getElementById('fuel-date').value=today;
+  renderList('fuel'); renderOverview();
+}
+
+async function saveRepair(){
+  const carId=document.getElementById('repair-car').value;
+  if(!carId){alert('กรุณาเลือกรถ');return;}
+  const row={id:Date.now().toString(),carId,
+    date:document.getElementById('repair-date').value,
+    type:document.getElementById('repair-type').value,
+    amount:document.getElementById('repair-amount').value,
+    detail:document.getElementById('repair-detail').value,
+    shop:document.getElementById('repair-shop').value,
+    km:document.getElementById('repair-km').value,
+    driveLink:document.getElementById('repair-drive').value};
+  const ok=await pushRow('repair_car',row); if(!ok) return;
+  data.repair_car.push(row);
+  clearFields(['repair-amount','repair-detail','repair-shop','repair-km','repair-drive']);
+  document.getElementById('repair-date').value=today;
+  renderList('repair_car'); renderOverview();
+}
+
+async function saveTrip(){
+  const carId=document.getElementById('trip-car').value;
+  if(!carId){alert('กรุณาเลือกรถ');return;}
+  const ks=parseFloat(document.getElementById('trip-km-start').value)||0;
+  const ke=parseFloat(document.getElementById('trip-km-end').value)||0;
+  const row={id:Date.now().toString(),carId,
+    date:document.getElementById('trip-date').value,
+    driver:document.getElementById('trip-driver').value,
+    purpose:document.getElementById('trip-purpose').value,
+    from:document.getElementById('trip-from').value,
+    to:document.getElementById('trip-to').value,
+    kmStart:ks, kmEnd:ke, dist:ke>ks?ke-ks:0,
+    cost:document.getElementById('trip-cost').value,
+    note:document.getElementById('trip-note').value};
+  const ok=await pushRow('trip',row); if(!ok) return;
+  data.trip.push(row);
+  clearFields(['trip-driver','trip-from','trip-to','trip-km-start','trip-km-end','trip-cost','trip-note']);
+  document.getElementById('trip-date').value=today;
+  renderList('trip');
+}
+
+// ── DELETE ──
+async function deleteRecord(table, id, dataKey){
+  if(!confirm('ลบรายการนี้ออกจากระบบ?')) return;
+  setSyncStatus('loading','กำลังลบ...');
+  try{
+    const r = await apiCall('delete', table, {id});
+    if(r.error) throw new Error(r.error);
+    data[dataKey] = data[dataKey].filter(x=>x.id!==id);
+    setSyncStatus('ok','✓ ลบแล้ว');
+    renderList(dataKey==='repair_car'?'repair_car':dataKey);
+    renderOverview();
+  }catch(e){ setSyncStatus('err','ลบไม่สำเร็จ'); }
+}
+
+// ── EDIT MODAL STATE ──
+let editModal = { table:'', dataKey:'', id:'', fields:[] };
+
+function openEditModal(table, dataKey, id){
+  const rec = data[dataKey].find(r=>r.id===id); if(!rec) return;
+  editModal = { table, dataKey, id };
+  const m = document.getElementById('modal-edit');
+  const title = { tax:'แก้ไขภาษีรถ', insurance:'แก้ไขประกันภัย', oil:'แก้ไขน้ำมันเครื่อง', fuel:'แก้ไขการเติมน้ำมัน', repair_car:'แก้ไขการซ่อม', trip:'แก้ไขเที่ยว' };
+  document.getElementById('edit-modal-title').textContent = title[dataKey]||'แก้ไข';
+
+  const fields = getEditFields(dataKey, rec);
+  document.getElementById('edit-modal-body').innerHTML = fields.map(f=>`
+    <div class="field">
+      <label>${f.label}</label>
+      ${f.type==='select'
+        ? `<select id="ef-${f.key}">${f.options.map(o=>`<option value="${o.v||o}" ${rec[f.key]===(o.v||o)?'selected':''}>${o.l||o}</option>`).join('')}</select>`
+        : f.type==='textarea'
+        ? `<textarea id="ef-${f.key}">${rec[f.key]||''}</textarea>`
+        : `<input type="${f.type||'text'}" id="ef-${f.key}" value="${rec[f.key]||''}">`}
+    </div>`).join('');
+  m.style.display='flex';
+}
+
+function getEditFields(type, rec){
+  const carOpts = data.cars.map(c=>({v:c.id,l:c.name}));
+  if(type==='tax') return [
+    {key:'carId',label:'รถ',type:'select',options:carOpts},
+    {key:'date',label:'วันที่ชำระ',type:'date'},
+    {key:'expiry',label:'วันหมดอายุภาษี',type:'date'},
+    {key:'amount',label:'ยอดเงิน (บาท)',type:'number'},
+    {key:'note',label:'หมายเหตุ',type:'textarea'}];
+  if(type==='insurance') return [
+    {key:'carId',label:'รถ',type:'select',options:carOpts},
+    {key:'type',label:'ชั้นประกัน',type:'select',options:['ชั้น 1','ชั้น 2+','ชั้น 2','ชั้น 3+','ชั้น 3','พ.ร.บ. เท่านั้น']},
+    {key:'company',label:'บริษัทประกัน',type:'text'},
+    {key:'policy',label:'เลขกรมธรรม์',type:'text'},
+    {key:'start',label:'วันเริ่มคุ้มครอง',type:'date'},
+    {key:'expiry',label:'วันหมดอายุ',type:'date'},
+    {key:'amount',label:'ยอดเบี้ย (บาท)',type:'number'},
+    {key:'coverage',label:'ทุนประกัน (บาท)',type:'number'},
+    {key:'agentName',label:'ชื่อตัวแทน',type:'text'},
+    {key:'agentPhone',label:'เบอร์ตัวแทน',type:'text'},
+    {key:'hotline',label:'เบอร์แจ้งอุบัติเหตุ',type:'text'},
+    {key:'tow',label:'เบอร์รถลาก',type:'text'},
+    {key:'note',label:'หมายเหตุ',type:'textarea'}];
+  if(type==='oil') return [
+    {key:'carId',label:'รถ',type:'select',options:carOpts},
+    {key:'date',label:'วันที่เปลี่ยน',type:'date'},
+    {key:'km',label:'เลขไมล์ (กม.)',type:'number'},
+    {key:'nextKm',label:'เปลี่ยนครั้งหน้า (กม.)',type:'number'},
+    {key:'amount',label:'ยอดเงิน (บาท)',type:'number'},
+    {key:'brand',label:'ยี่ห้อน้ำมัน',type:'text'},
+    {key:'grade',label:'เกรดน้ำมัน',type:'text'},
+    {key:'shop',label:'ร้าน/ศูนย์',type:'text'},
+    {key:'note',label:'หมายเหตุ',type:'textarea'}];
+  if(type==='fuel') return [
+    {key:'carId',label:'รถ',type:'select',options:carOpts},
+    {key:'date',label:'วันที่เติม',type:'date'},
+    {key:'type',label:'ประเภทน้ำมัน',type:'select',options:['ดีเซล B7','ดีเซล B10','ดีเซล B20','เบนซิน 91','เบนซิน 95','E20','E85','แก๊ส NGV']},
+    {key:'liter',label:'จำนวนลิตร',type:'number'},
+    {key:'price',label:'ราคา/ลิตร',type:'number'},
+    {key:'total',label:'ยอดรวม (บาท)',type:'number'},
+    {key:'km',label:'เลขไมล์ (กม.)',type:'number'},
+    {key:'station',label:'สถานีน้ำมัน',type:'text'}];
+  if(type==='repair_car') return [
+    {key:'carId',label:'รถ',type:'select',options:carOpts},
+    {key:'date',label:'วันที่ซ่อม',type:'date'},
+    {key:'type',label:'ประเภทการซ่อม',type:'select',options:['ซ่อมเครื่องยนต์','ซ่อมเกียร์','ระบบเบรก','ระบบไฟฟ้า','ยาง/ล้อ','แอร์','ระบบกันสะเทือน','ตัวถัง/สี','บำรุงรักษาตามระยะ','อื่นๆ']},
+    {key:'amount',label:'ยอดเงิน (บาท)',type:'number'},
+    {key:'detail',label:'รายละเอียด',type:'textarea'},
+    {key:'shop',label:'ร้าน/อู่ซ่อม',type:'text'},
+    {key:'km',label:'เลขไมล์ (กม.)',type:'number'}];
+  if(type==='trip') return [
+    {key:'carId',label:'รถ',type:'select',options:carOpts},
+    {key:'date',label:'วันที่',type:'date'},
+    {key:'driver',label:'คนขับ',type:'text'},
+    {key:'purpose',label:'วัตถุประสงค์',type:'select',options:['ติดต่องาน','รับส่งผู้บริหาร','ขนส่งสินค้า','อบรม/สัมมนา','ซ่อมบำรุง','อื่นๆ']},
+    {key:'from',label:'ต้นทาง',type:'text'},
+    {key:'to',label:'ปลายทาง',type:'text'},
+    {key:'kmStart',label:'ไมล์ก่อนออก',type:'number'},
+    {key:'kmEnd',label:'ไมล์หลังกลับ',type:'number'},
+    {key:'cost',label:'ค่าใช้จ่าย (บาท)',type:'number'},
+    {key:'note',label:'หมายเหตุ',type:'textarea'}];
+  return [];
+}
+
+async function saveEdit(){
+  const {table, dataKey, id} = editModal;
+  const rec = data[dataKey].find(r=>r.id===id); if(!rec) return;
+  const fields = getEditFields(dataKey, rec);
+  const updated = {...rec};
+  fields.forEach(f=>{ const el=document.getElementById('ef-'+f.key); if(el) updated[f.key]=el.value; });
+  if(dataKey==='trip'){ const ks=parseFloat(updated.kmStart)||0,ke=parseFloat(updated.kmEnd)||0; updated.dist=ke>ks?ke-ks:0; }
+  setSyncStatus('loading','กำลังบันทึก...');
+  try{
+    const r = await apiCall('upsert', table, {row:updated});
+    if(r.error) throw new Error(r.error);
+    const idx = data[dataKey].findIndex(x=>x.id===id);
+    if(idx>=0) data[dataKey][idx]=updated;
+    setSyncStatus('ok','✓ แก้ไขแล้ว');
+    closeModal('modal-edit');
+    renderList(dataKey); renderOverview();
+  }catch(e){ setSyncStatus('err','บันทึกไม่สำเร็จ'); }
+}
+
+// ── RENDER LISTS with edit/delete ──
+function renderList(type){
+  const elId = type==='repair_car'?'repair-list':(type+'-list');
+  const el=document.getElementById(elId); if(!el) return;
+  const items=[...data[type]].sort((a,b)=>new Date(b.date||b.expiry)-new Date(a.date||a.expiry));
+  if(items.length===0){ el.innerHTML='<div class="empty-state">ยังไม่มีรายการ</div>'; return; }
+
+  const tableMap={tax:'tax',insurance:'insurance',oil:'oil',fuel:'fuel',repair_car:'repair_car',trip:'trip'};
+  const tbl=tableMap[type];
+
+  function actionBtns(r){ return `<div style="display:flex;gap:5px;flex-shrink:0">
+    <button onclick="event.stopPropagation();openEditModal('${tbl}','${type}','${r.id}')" class="btn-ghost btn-sm" style="padding:3px 9px;font-size:11px">แก้ไข</button>
+    <button onclick="event.stopPropagation();deleteRecord('${tbl}','${r.id}','${type}')" style="background:none;border:0.5px solid #f7c1c1;color:#A32D2D;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer">ลบ</button>
+  </div>`; }
+
+  if(type==='tax'){
+    el.innerHTML=items.map(r=>`<div class="record-item"><div class="flex-between"><div><strong>${getCarName(r.carId)}</strong> <span class="record-meta">ชำระ ${fmtDate(r.date)}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:500">${fmt(r.amount)} ฿</span>${actionBtns(r)}</div></div><div class="record-meta" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">หมดอายุ: ${fmtDate(r.expiry)}${r.note?' · '+r.note:''} ${driveBtn(r.driveLink,'ดูบิล')}</div></div>`).join('');
+  } else if(type==='insurance'){
+    el.innerHTML=items.map(r=>`<div class="record-item">
+      <div class="flex-between"><div class="flex-center"><strong>${getCarName(r.carId)}</strong><span class="badge bi">${r.type}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:500">${fmt(r.amount)} ฿</span>${actionBtns(r)}</div></div>
+      <div class="record-meta">${r.company||''}${r.policy?' · กรมธรรม์ '+r.policy:''}</div>
+      <div class="record-meta" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">คุ้มครอง ${fmtDate(r.start)} – ${fmtDate(r.expiry)}${r.coverage?' · ทุน '+fmt(r.coverage)+' ฿':''} ${driveBtn(r.driveLink,'ดูกรมธรรม์')}</div>
+      ${r.agentName||r.agentPhone?`<div class="record-meta">👤 ${r.agentName||''}${r.agentPhone?' · <a href="tel:'+r.agentPhone+'">'+r.agentPhone+'</a>':''}</div>`:''}
+      ${r.hotline?`<div class="record-meta">🚨 <a href="tel:${r.hotline}" style="color:#A32D2D;font-weight:500">${r.hotline}</a>${r.tow?' &nbsp;🚗 <a href="tel:'+r.tow+'">'+r.tow+'</a>':''}</div>`:''}
+    </div>`).join('');
+  } else if(type==='oil'){
+    el.innerHTML=items.map(r=>`<div class="record-item"><div class="flex-between"><div><strong>${getCarName(r.carId)}</strong> <span class="record-meta">${fmtDate(r.date)}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:500">${fmt(r.amount)} ฿</span>${actionBtns(r)}</div></div><div class="record-meta" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${[r.brand,r.grade,r.km?fmt(r.km)+' กม.':'',r.nextKm?'ครั้งหน้า '+fmt(r.nextKm)+' กม.':'',r.filter==='1'?'เปลี่ยนไส้กรอง':''].filter(Boolean).join(' · ')} ${driveBtn(r.driveLink,'ดูบิล')}</div></div>`).join('');
+  } else if(type==='fuel'){
+    el.innerHTML=items.map(r=>`<div class="record-item"><div class="flex-between"><div><strong>${getCarName(r.carId)}</strong> <span class="badge bg">${r.type}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:500">${fmt(r.total)} ฿</span>${actionBtns(r)}</div></div><div class="record-meta" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${fmtDate(r.date)} · ${Number(r.liter||0).toFixed(1)} ล. · ${fmt(r.price)} ฿/ล.${r.km?' · '+fmt(r.km)+' กม.':''}${r.station?' · '+r.station:''} ${driveBtn(r.driveLink,'ดูสลิป')}</div></div>`).join('');
+  } else if(type==='repair_car'){
+    el.innerHTML=items.map(r=>`<div class="record-item"><div class="flex-between"><div class="flex-center"><strong>${getCarName(r.carId)}</strong><span class="badge bi">${r.type}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:500">${fmt(r.amount)} ฿</span>${actionBtns(r)}</div></div><div class="record-meta" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${fmtDate(r.date)}${r.shop?' · '+r.shop:''}${r.km?' · '+fmt(r.km)+' กม.':''} ${driveBtn(r.driveLink,'ดูบิล')}</div>${r.detail?`<div class="record-meta">${r.detail}</div>`:''}</div>`).join('');
+  } else if(type==='trip'){
+    el.innerHTML=items.map(r=>`<div class="record-item"><div class="flex-between"><div class="flex-center"><strong>${getCarName(r.carId)}</strong><span class="badge bg">${r.purpose}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:500">${r.dist?fmt(r.dist)+' กม.':'-'}</span>${actionBtns(r)}</div></div><div class="record-meta">${fmtDate(r.date)} · ${r.driver||'ไม่ระบุ'}${r.from?' · '+r.from+' → '+r.to:''}</div></div>`).join('');
+  }
+}
+
+// ── REPORT ──
+function populateReportSelects(){
+  const curYear=new Date().getFullYear();
+  const years=new Set([curYear,curYear-1]);
+  [...data.tax,...data.insurance,...data.oil,...data.fuel,...data.repair_car].forEach(r=>{
+    const d=r.date||r.expiry; if(!d) return;
+    try{
+      let yr;
+      if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(d)){ yr=parseInt(d.split('/')[2]); }
+      else { yr=new Date(d).getFullYear(); }
+      if(!isNaN(yr)) years.add(yr);
+    }catch(e){}
+  });
+  document.getElementById('rep-year').innerHTML=[...years].sort((a,b)=>b-a).map(y=>`<option value="${y}">${y+543} (${y})</option>`).join('');
+  document.getElementById('rep-car').innerHTML='<option value="all">รถทุกคัน</option>'+data.cars.map(c=>`<option value="${c.id}">${getVehicleIcon(c)} ${c.name}</option>`).join('');
+}
+
+function getRecordYear(r){
+  // For insurance use start date not expiry for report grouping
+  const d = r.start || r.date || r.expiry; if(!d) return null;
+  try{
+    if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(d)){ return parseInt(d.split('/')[2]); }
+    return new Date(d).getFullYear();
+  }catch(e){ return null; }
+}
+function getRecordMonth(r){
+  const d = r.start || r.date || r.expiry; if(!d) return null;
+  try{
+    if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(d)){ return parseInt(d.split('/')[0])-1; }
+    return new Date(d).getMonth();
+  }catch(e){ return null; }
+}
+
+function renderReport(){
+  const year=parseInt(document.getElementById('rep-year').value)||new Date().getFullYear();
+  const filterCar=document.getElementById('rep-car').value;
+  const cf=r=>filterCar==='all'||r.carId===filterCar;
+  const yf=r=>getRecordYear(r)===year;
+  const taxR=data.tax.filter(cf).filter(yf),insR=data.insurance.filter(cf).filter(yf),oilR=data.oil.filter(cf).filter(yf),fuelR=data.fuel.filter(cf).filter(yf),repR=data.repair_car.filter(cf).filter(yf);
+  const sum=a=>a.reduce((s,r)=>s+Number(r.amount||r.total||0),0);
+  const tT=sum(taxR),iT=sum(insR),oT=sum(oilR),fT=sum(fuelR),rT=sum(repR),grand=tT+iT+oT+fT+rT;
+  const months=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const monthly=Array(12).fill(0);
+  [...taxR,...insR,...oilR,...fuelR,...repR].forEach(r=>{ const m=getRecordMonth(r); if(m!==null) monthly[m]+=Number(r.amount||r.total||0); });
+  const maxM=Math.max(...monthly,1);
+  const bars=months.map((m,i)=>`<div class="chart-bar-wrap"><div class="flex-between"><span class="chart-label">${m}</span><span class="chart-label">${fmt(monthly[i])} ฿</span></div><div class="chart-bar-bg"><div class="chart-bar" style="width:${Math.round(monthly[i]/maxM*100)}%;background:#1a1a18"></div></div></div>`).join('');
+  const carRows=data.cars.filter(c=>filterCar==='all'||c.id===filterCar).map(car=>{
+    const cc=r=>r.carId===car.id;
+    const ct=sum(taxR.filter(cc))+sum(insR.filter(cc))+sum(oilR.filter(cc))+sum(fuelR.filter(cc))+sum(repR.filter(cc));
+    if(!ct) return '';
+    return `<tr><td>${getVehicleIcon(car)} ${car.name}</td><td class="num">${fmt(sum(taxR.filter(cc)))}</td><td class="num">${fmt(sum(insR.filter(cc)))}</td><td class="num">${fmt(sum(oilR.filter(cc)))}</td><td class="num">${fmt(sum(fuelR.filter(cc)))}</td><td class="num">${fmt(sum(repR.filter(cc)))}</td><td class="num"><strong>${fmt(ct)}</strong></td></tr>`;
+  }).filter(Boolean).join('');
+  document.getElementById('report-content').innerHTML=`
+    <div class="stat-grid-3"><div class="stat"><div class="stat-label">ค่าใช้จ่ายรวม</div><div class="stat-value">${fmt(grand)}</div><div class="stat-sub">บาท</div></div><div class="stat"><div class="stat-label">ค่าน้ำมัน</div><div class="stat-value">${fmt(fT)}</div><div class="stat-sub">บาท</div></div><div class="stat"><div class="stat-label">ค่าซ่อม</div><div class="stat-value">${fmt(rT)}</div><div class="stat-sub">บาท</div></div></div>
+    <div class="card" style="margin-bottom:12px"><div class="card-title">รายเดือน ปี ${year+543}</div>${bars}</div>
+    <div class="card"><div class="card-title">สรุปรายคัน</div><div style="overflow-x:auto"><table class="report-table"><thead><tr><th>รถ</th><th class="num">ภาษี</th><th class="num">ประกัน</th><th class="num">น้ำมันเครื่อง</th><th class="num">เติมน้ำมัน</th><th class="num">ซ่อม</th><th class="num">รวม</th></tr></thead><tbody>${carRows||'<tr><td colspan="7" style="text-align:center;color:#ccc;padding:20px">ไม่มีข้อมูล</td></tr>'}</tbody><tfoot><tr style="border-top:1px solid #eee"><td><strong>รวม</strong></td><td class="num">${fmt(tT)}</td><td class="num">${fmt(iT)}</td><td class="num">${fmt(oT)}</td><td class="num">${fmt(fT)}</td><td class="num">${fmt(rT)}</td><td class="num"><strong>${fmt(grand)}</strong></td></tr></tfoot></table></div></div>`;
+}
+
+function exportCSV(){
+  const rows=[['ประเภท','รถ','วันที่','รายละเอียด','ยอดเงิน']];
+  data.tax.forEach(r=>rows.push(['ภาษีรถ',getCarName(r.carId),r.date,'หมดอายุ '+r.expiry,r.amount||0]));
+  data.insurance.forEach(r=>rows.push(['ประกันภัย '+r.type,getCarName(r.carId),r.start||r.expiry,r.company,r.amount||0]));
+  data.oil.forEach(r=>rows.push(['น้ำมันเครื่อง',getCarName(r.carId),r.date,[r.brand,r.grade].filter(Boolean).join(' '),r.amount||0]));
+  data.fuel.forEach(r=>rows.push(['เติมน้ำมัน',getCarName(r.carId),r.date,r.type+' '+r.liter+'ล.',r.total||0]));
+  data.repair_car.forEach(r=>rows.push(['ซ่อม: '+r.type,getCarName(r.carId),r.date,r.detail||r.shop||'',r.amount||0]));
+  data.trip.forEach(r=>rows.push(['เที่ยว',getCarName(r.carId),r.date,(r.driver||'')+(r.from?' '+r.from+'→'+r.to:''),r.cost||0]));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`car_log_${today}.csv`; a.click();
+}
+
+// ── INIT ──
+['tax-date','ins-start','oil-date','fuel-date','repair-date','trip-date'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=today; });
+loadAll();
+</script>
+</body>
+</html>
